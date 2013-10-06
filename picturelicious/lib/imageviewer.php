@@ -111,8 +111,8 @@ class ImageViewer extends ImageCatalog {
 
     foreach( array_keys($this->comments) as $i ) {
       $this->comments[$i]['content'] = preg_replace( 
-        '#(?<!\w)(((http|ftp)(s)?://)|(www\.))([^\s<>]+)#i',
-        "<a href=\"$3$4://$5$6\">$5$6</a>", 
+        '#(?<!\w)(((http|https|ftp)://)|(www\.))([^\s<>]+)#i',
+        "<a href=\"$3://$4$5\">$4$5</a>", 
         nl2br( htmlspecialchars($this->comments[$i]['content']) )
       );
     }

@@ -45,7 +45,7 @@ class ImageUploader {
     if( self::process( $fileName, $targetPath, $tags, false, $errors, $url ) ) {
       return true;
     } else {
-      @unlink( $targePath );
+      @unlink( $targetPath );
       return false;
     }
   }

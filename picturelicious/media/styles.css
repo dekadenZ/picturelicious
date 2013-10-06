@@ -219,7 +219,7 @@ div#images {
         height: 128px;
       }
       .b2 {
-        width: 64x;
+        width: 64px;
         height: 64px;
       }
 
@@ -294,6 +294,24 @@ div.teaser {
   display: block;
 }
 
+/* Random thumbnails
+---------------------------------------------------------*/
+
+div.randomThumbs {
+  display: block;
+  height: 126px;
+  width: 504px;
+  margin: 0 auto;
+}
+
+a.randomThumbs {
+  background-color: #222;
+}
+
+a.randomThumbs:hover img {
+  opacity: 0.9;
+  filter: alpha( opacity = 90 );
+}
 
 /* Comments
 ---------------------------------------------------------*/

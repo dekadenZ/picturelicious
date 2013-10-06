@@ -186,6 +186,7 @@ else if( //----------------------------------------------------- browse
 else if( $r[0] == 'random' ) {
   $count = max( 1, min( Config::$maxRandomThumbs, intval($r[1]) ) );
   $size = '';
+  list( $twidth, $theight ) = sscanf($r[2], '%ux%u');
   foreach( Config::$gridView['classes'] as $c ) {
     if( $r[2] == $c['dir'] ) {
       $size = $r[2];
