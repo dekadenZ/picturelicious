@@ -36,7 +36,7 @@ class ImageBrowser extends ImageCatalog {
           ON u.id = i.user
         LEFT JOIN '.TABLE_IMAGECOLORS.' ic
           ON ic.imageId = i.id
-        WHERE 
+        WHERE
           ic.r BETWEEN :3 - :6 AND :3 + :6
         AND
           ic.g BETWEEN :4 - :6 AND :4 + :6
@@ -53,7 +53,7 @@ class ImageBrowser extends ImageCatalog {
         $this->searchColor['b'],
         Config::$colorSearchDev
       );
-    } 
+    }
     else if( $this->searchTerm ) { // ------------------------ fulltext search
       $ftq = preg_replace( '/\s+/',' +', $this->searchTerm );
       $this->thumbs = DB::query(
@@ -64,7 +64,7 @@ class ImageBrowser extends ImageCatalog {
         FROM '.TABLE_IMAGES.' i
         LEFT JOIN '.TABLE_USERS.' u
           ON u.id = i.user
-        WHERE 
+        WHERE
           i.image LIKE :3
           OR MATCH( i.tags ) AGAINST ( :4 IN BOOLEAN MODE )
         ORDER BY i.id DESC
@@ -77,27 +77,37 @@ class ImageBrowser extends ImageCatalog {
       );
     }
     else { // -------------------------------------------------------- user/all
-      $conditions = '';
-      if( !empty($this->user) ) {
-        $conditions .= ' AND i.user = :3';
+      assert(is_int($this->thumbsPerPage));
+
+      $params = array(
+          'offset' => $this->page * $this->thumbsPerPage,
+          'count' => $this->thumbsPerPage,
+        );
+
+      if (empty($this->user)) {
+        $where_clause = 'TRUE';
+      } else {
+        $where_clause = 'i.`user` = :user';
+        $params['user'] = $this->user['id'];
       }
 
       $this->thumbs = DB::query(
         'SELECT SQL_CALC_FOUND_ROWS
-          i.logged, UNIX_TIMESTAMP(i.logged) AS loggedTS,
-          i.keyword, i.thumb, i.score, i.votes,
-          u.name AS userName
-        FROM '.TABLE_IMAGES.' i
-        LEFT JOIN '.TABLE_USERS.' u
-          ON u.id = i.user
-        WHERE 1 '.$conditions.'
-        ORDER BY i.id DESC
-        LIMIT :1, :2',
-
-        $this->page * $this->thumbsPerPage,
-        $this->thumbsPerPage,
-        $this->user['id']
-      );
+          i.`logged`, i.`keyword`, i.`thumb`, u.`name` AS `userName`,
+          COUNT(r.`rating`) + IFNULL(l.`votecount`, 0) AS `votes`,
+          (IFNULL(SUM(r.`rating`), 0) + IFNULL(l.`rating`, 0) * IFNULL(l.`votecount`, 0)) / (COUNT(r.`rating`) + IFNULL(l.`votecount`, 0))
+            AS `score`,
+          COUNT(f.`user`) AS `favorited_count`
+        FROM ' . DB::escape_identifier(TABLE_IMAGES) . ' AS i
+          INNER JOIN ' . DB::escape_identifier(TABLE_USERS) . ' AS u ON u.`id` = i.`user`
+          LEFT OUTER JOIN `pl_images_legacy` AS l ON i.`id` = l.`image`
+          LEFT OUTER JOIN `pl_imageratings` AS r FORCE INDEX (PRIMARY) ON i.`id` = r.`image`
+          LEFT OUTER JOIN `pl_favorite_images` AS f ON i.`id` = f.`image`
+        WHERE ' . $where_clause . ' AND (r.`user` IS NULL OR i.`id` <> r.`user`)
+        GROUP BY i.`id`
+        ORDER BY i.`id` DESC
+        LIMIT :offset, :count',
+        $params);
     }
 
     $this->totalResults = DB::foundRows();
@@ -134,7 +144,7 @@ class ImageBrowser extends ImageCatalog {
     );
 
     foreach( array_keys( $this->thumbs ) as $i ) {
-      $this->thumbs[$i]['thumb'] = Config::$images['thumbPath'] . 
+      $this->thumbs[$i]['thumb'] = Config::$images['thumbPath'] .
         str_replace( '-', '/', substr( $this->thumbs[$i]['logged'], 0, 7 ) )
         .'/'. $thumbSize
         .'/'. $this->thumbs[$i]['thumb'];

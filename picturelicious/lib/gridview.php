@@ -8,6 +8,14 @@
 
 require_once( 'lib/config.php' );
 
+
+function uasort_copy( $array, $comparator_callback )
+{
+  $rv = uasort($array, $comparator_callback);
+  return $rv ? $array : null;
+}
+
+
 class GridView {
 
   public $height = 0;
@@ -20,77 +28,71 @@ class GridView {
   }
 
   // solve expects an array with thumbnails with the keys name and score
-  public function solve( &$thumbs ) {
-    if( !is_array( $thumbs ) ) {
-      return false;
-    }
+  public function solve( $thumbs )
+  {
+    assert(is_array($thumbs));
 
-    // Order thumbs by importance (score), but leave the keys as they are
-    uasort( $thumbs, array( $this, 'compareScore' ) );
+    // Get thumb indices sorted by thumb importance ("score").
+    $thumbs_importance =
+      array_keys(uasort_copy($thumbs, __CLASS__.'::compareScore'));
 
     // How many thumbs get which CSS-Class? The first n thumbnails
     // get the biggest box etc.
+    $classes = Config::$gridView['classes'];
     $total = count( $thumbs );
     $classCounts = array();
     $currentCount = 0;
-    foreach( Config::$gridView['classes'] as $className => $gc ) {
+    foreach( $classes as $className => $gc ) {
       $currentCount += $gc['percentage'] * $total;
       $classCounts[$className] =  ceil( $currentCount );
     }
 
     // Assign a CSS-Class to each thumb
-    $currentMax = -1;
+    $pathPrefix = Config::$absolutePath . Config::$images['thumbPath'];
+    $currentMax = 0;
     $currentClass = '';
     $j = 0;
-    foreach( array_keys( $thumbs ) as $i ) {
-      if( $j >= $currentMax ) {
+    foreach ($thumbs_importance as $i) {
+      if( $j++ >= $currentMax ) {
         list( $currentClass, $currentMax ) = each( $classCounts );
       }
-      $j++;
-      $thumbs[$i]['class'] = $currentClass;
-      $thumbs[$i]['thumb'] = Config::$absolutePath . Config::$images['thumbPath'] . 
-        str_replace( '-', '/', substr( $thumbs[$i]['logged'], 0, 7 ) )
-        .'/'. Config::$gridView['classes'][$currentClass]['dir']
-        .'/'. $thumbs[$i]['thumb'];
+
+      $t = &$thumbs[$i];
+      $t['class'] = $currentClass;
+      $t['thumb'] = $pathPrefix . date('Y/m', $t['logged'])
+        .'/'. $classes[$currentClass]['dir']
+        .'/'. $t['thumb'];
     }
 
-    // Sort the thumbs back in the order we got them
-    ksort( $thumbs );
-
     // Now that every thumb has a CSS-Class, we can sort them into our grid
-    for( $i = 0; $i < $total; $i++ ) {
-      list( $x, $y ) = $this->insert( 
-        Config::$gridView['classes'][$thumbs[$i]['class']]['width'], 
-        Config::$gridView['classes'][$thumbs[$i]['class']]['height'] 
+    $gridSize = Config::$gridView['gridSize'];
+    foreach ($thumbs as &$t) {
+      list( $x, $y ) = $this->insert(
+        $classes[$t['class']]['width'],
+        $classes[$t['class']]['height']
       );
-      $thumbs[$i]['left'] = $x * Config::$gridView['gridSize'];
-      $thumbs[$i]['top'] = $y * Config::$gridView['gridSize'];
+      $t['left'] = $x * $gridSize;
+      $t['top'] = $y * $gridSize;
     }
 
     // Calculate the final grid height
-    for( $i = 0; $i < $this->gridWidth; $i++ ) {
-      if( $this->grid[$i] > $this->height ) {
-        $this->height = $this->grid[$i];
-      }
-    }
+    $this->height = max($this->height, max($this->grid));
 
-    return true;
+    return $thumbs;
   }
 
   // Callback for uasort()
-  protected function compareScore( $a, $b ) {
-    return $a['score'] > $b['score'] ? 
-      1 : 
-      ( $a['score'] == $b['score'] &&  $a['votes'] > $b['votes'] ?
-        1 :
-        -1
-      );
+  public static function compareScore( $a, $b ) {
+    $rv = $a['score'] - $b['score'];
+    if (!$rv)
+      $rv = $a['votes'] - $b['votes'];
+    return ($rv > 0) - ($rv < 0);
   }
 
   protected function insert( $boxWidth, $boxHeight ) {
 
     // Height of the grid
-    $maxHeight = 0; 
+    $maxHeight = 0;
 
     // Height of the grid at the last position
     $currentHeight = $this->grid[0];
@@ -109,7 +111,7 @@ class GridView {
         $spotWidth++;
       }
 
-      // The height is different from the last position, and our current spot 
+      // The height is different from the last position, and our current spot
       // is wider than 0
       if( ( $currentHeight != $this->grid[$i] || $i+1 == $this->gridWidth) && $spotWidth > 0 ) {
         $freeSpots[] = array( 'width' =>$spotWidth, 'left' => $spotLeft, 'height' => $currentHeight );
@@ -128,32 +130,25 @@ class GridView {
 
     // Loop through all found spots and rate them, based on their size and height
     // This way the smallest possible spot in the lowest possible height is filled
-    $targetHeight = 0;
+    $targetHeight = max(max($this->grid), 0);
     $targetLeft = 0;
 
-    // Default spot (left border) if we don't find a better one
-    for( $i = 0; $i < $boxWidth; $i++ ) {
-      if( $this->grid[$i] > $targetHeight ) {
-        $targetHeight = $this->grid[$i];
-      }
-    }   
-
     $bestScore = -1;
-    foreach( array_keys( $freeSpots ) as $i ) {
+    foreach( $freeSpots as $fs ) {
 
       // Difference of the height of this spot to the total height of the grid
-      $heightScore = ( $maxHeight - $freeSpots[$i]['height'] );
+      $heightScore = ( $maxHeight - $fs['height'] );
 
       // Relation of the required and the available space
-      $widthScore = $boxWidth / $freeSpots[$i]['width'];
+      $widthScore = $boxWidth / $fs['width'];
 
       // The score for this spot is calculated by these both criteria
       $score = $heightScore * $heightScore + $widthScore * 2;
 
       // Is the score for this spot higher than for the last one we found?
-      if( $freeSpots[$i]['width'] >= $boxWidth && $score > $bestScore ) {
-        $targetHeight = $freeSpots[$i]['height'];
-        $targetLeft = $freeSpots[$i]['left'];
+      if( $fs['width'] >= $boxWidth && $score > $bestScore ) {
+        $targetHeight = $fs['height'];
+        $targetLeft = $fs['left'];
         $bestScore = $score;
       }
     }

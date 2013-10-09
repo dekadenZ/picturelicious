@@ -61,7 +61,7 @@
     echo '<div class="'.$thumb['class'].'" style="left:'.$thumb['left'].'px;top:'.$thumb['top'].'px;"><a class="thumb" href="'
       .Config::$absolutePath.$imgBasePath.'view/'.$thumb['keyword'].'">'
       .'<img src="'.$thumb['thumb'].'" alt="'.$thumb['keyword'].'" title="'.$thumb['userName'].' - '.
-      date('d. M Y H:i',$thumb['loggedTS']).'"/></a></div>'."\n";
+      date('d. M Y H:i',$thumb['logged']).'"/></a></div>'."\n";
     }
   }
 ?>

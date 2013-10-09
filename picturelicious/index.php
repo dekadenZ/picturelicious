@@ -173,7 +173,7 @@ else if( //----------------------------------------------------- browse
   if( !empty($ib->thumbs) ) {
     require_once( 'lib/gridview.php' );
     $gv = new GridView( Config::$gridView['gridWidth'] );
-    $gv->solve( $ib->thumbs );
+    $ib->thumbs = $gv->solve( $ib->thumbs );
 
     $cache->capture();
     include( Config::$templates.'browse.tpl.php' );
