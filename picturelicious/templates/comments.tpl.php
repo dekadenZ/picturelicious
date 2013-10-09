@@ -12,6 +12,7 @@ $newComments = DB::query(
   ORDER BY c.created DESC LIMIT 100'
 );
 include( Config::$templates.'header.tpl.php' );
+require_once( 'lib/time.php' );
 ?>
 <h2>Newest comments:</h2>
 <div style="width: 700px;">
@@ -20,7 +21,7 @@ include( Config::$templates.'header.tpl.php' );
       <div class="commentHead">
         <img class="avatarSmall" width="16" height="16" src="<?php echo Config::$absolutePath.$c['avatar']; ?>"/>
         <a href="<?php echo Config::$absolutePath.'user/'.$c['name']; ?>"><?php echo $c['name']; ?></a>
-        at <?php echo date('d. M Y H:i',$c['created']); ?> 
+        <?php echo time_diff_human($c['created']); ?>
         [image:<a href="<?php echo Config::$absolutePath.'all/view/'.$c['keyword']; ?>"><?php echo $c['keyword']; ?></a>]
         <?php if($user->admin) { ?>
           <div style="float:right;" id="del">
