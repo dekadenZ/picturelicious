@@ -8,10 +8,10 @@
 class Config {
 
   // Names and URLs for your installation
-  public static $absolutePath = '/';
-  public static $frontendPath = 'http://picturelicious.net/';
+  public static $absolutePath = '/picturelicious/';
+  public static $frontendPath = 'http://localhost:8080/';
   public static $siteName = 'Picturelicious';
-  public static $siteTitle = 'Picturelicious - Social Imaging';
+  public static $siteTitle = 'Picturelicious – Social Imaging';
 
   public static $sessionCookie = 'sid';
   public static $rememberCookie = 'remember';
@@ -29,7 +29,7 @@ class Config {
 
   // Misc settings
   public static $usersPerPage = 50;
-  public static $defaultChmod = 0777;
+  public static $defaultChmod = 0744;
   public static $templates = 'templates/';
   public static $keywordWordSeperator = '-';
 
@@ -46,17 +46,16 @@ class Config {
 
   // Cache settings
   public static $cache = array(
-    'enabled' => true,
+    'enabled' => false,
     'path' => 'cache/',
     'clearEvery' => 10
   );
 
   // Database settings
   public static $db = array(
-    'host' => 'localhost',
-    'database' => 'picturelicious',
-    'user' => 'root',
-    'password' => '',
+    'datasource' => 'mysql:protocol=memory;dbname=picturelicious',
+    'user' => 'malte',
+    'password' => 'C\e!>k7QcGp1p+uI',
     'prefix' => 'pl_'
   );
 
