@@ -160,7 +160,7 @@ class DB {
 
     $escape_identifier = __CLASS__.'::escape_identifier';
     $r = self::query_nofetch(
-      'UPDATE ' . escape_identifier($table) . '
+      'UPDATE ' . self::escape_identifier($table) . '
       SET ' . join('=?, ', array_map($escape_identifier, array_keys($updateFields))) . '=?
       WHERE ' . join('=?, ', array_map($escape_identifier, array_keys($idFields))) . '=?',
       array_merge(array_values($updateFields), array_values($idFields)));
@@ -172,7 +172,7 @@ class DB {
   {
     assert(is_array($insertFields) && !empty($insertFields));
 
-    $q = 'INSERT INTO ' . escape_identifier($table);
+    $q = 'INSERT INTO ' . self::escape_identifier($table);
     if (!isset($insertFields[0])) {
       $q .= ' (' . join(', ', array_map(__CLASS__.'::escape_identifier', array_keys($insertFields))) . ')';
     }
