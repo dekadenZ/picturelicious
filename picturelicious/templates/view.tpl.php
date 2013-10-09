@@ -1,4 +1,9 @@
-<?php include( Config::$templates.'header.tpl.php' ); ?>
+<?php include( Config::$templates.'header.tpl.php' );
+require_once( 'lib/time.php' );
+
+$time = ($iv->image['loggedTS']); // setting timestamp
+?>
+
 
 <h1>
   &raquo; Viewing
@@ -7,8 +12,9 @@
   <?php } else if( !empty($iv->channel) ) { ?>
     channel: <a href="<?php echo Config::$absolutePath.'channel/'.$iv->channel['keyword']; ?>"><?php echo $iv->channel['name']; ?></a>
   <?php } else { ?>
-    all
-  <?php } ?>
+    "<?php echo htmlspecialchars($iv->image['path']) ?>" // posted
+    <?php echo time_diff_human($time);
+  } ?>
 </h1>
 
 <div class="userInfo">
@@ -20,7 +26,7 @@
   </div>
   <div class="info">
     Score: <strong><?php echo $iv->userInfo['score']; ?></strong> /
-    Images: <strong><?php echo $iv->userInfo['images']; ?></strong> 
+    Images: <strong><?php echo $iv->userInfo['images']; ?></strong>
     <?php if( !empty($iv->userInfo['website'])) { ?>/
       Website: <strong><a href="<?php echo htmlspecialchars($iv->userInfo['website']); ?>" target="_blank">
         <?php echo htmlspecialchars($iv->userInfo['website']); ?>
@@ -115,8 +121,9 @@
           <div class="commentHead">
             <img class="avatarSmall" width="16" height="16" src="<?php echo Config::$absolutePath.$c['avatar']; ?>"/>
             <a href="<?php echo Config::$absolutePath.'user/'.$c['name']; ?>"><?php echo $c['name']; ?></a>
-            at <?php echo date('d. M Y H:i',$c['created']); ?>
-            <?php if($user->admin) { ?>
+            <?php
+            echo time_diff_human($c['created']);
+            if($user->admin) { ?>
               <div style="float:right;" id="del">
                 <a href="#" onclick="return delComment(<?php echo $c['id']; ?>, this)">[x]</a>
               </div>
