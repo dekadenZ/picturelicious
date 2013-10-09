@@ -26,7 +26,7 @@ class DB {
 
   private static function connect() {
     if (!is_null(self::$link))
-      return;
+      return self::$link;
 
     $db = Config::$db;
     try {

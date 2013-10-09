@@ -104,6 +104,7 @@ class ImageBrowser extends ImageCatalog {
           LEFT OUTER JOIN `pl_imageratings` AS r FORCE INDEX (PRIMARY) ON i.`id` = r.`image`
           LEFT OUTER JOIN `pl_favorite_images` AS f ON i.`id` = f.`image`
         WHERE ' . $where_clause . ' AND (r.`user` IS NULL OR i.`id` <> r.`user`)
+          AND i.`delete_reason` = \'\'
         GROUP BY i.`id`
         ORDER BY i.`id` DESC
         LIMIT :offset, :count',
