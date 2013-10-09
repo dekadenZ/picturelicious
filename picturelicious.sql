@@ -72,6 +72,7 @@ CREATE TABLE `pl_imageratings` (
 CREATE TABLE `pl_favorite_images` (
   `user` BIGINT UNSIGNED NOT NULL,
   `image` BIGINT UNSIGNED NOT NULL,
+  `time` BIGINT NOT NULL,
   PRIMARY KEY (`user`, `image`),
   FOREIGN KEY (`user`) REFERENCES `pl_users` (`id`) ON DELETE CASCADE,
   FOREIGN KEY (`image`) REFERENCES `pl_images` (`id`) ON DELETE CASCADE,
