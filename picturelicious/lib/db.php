@@ -12,118 +12,161 @@
 require_once( 'lib/config.php' );
 
 class DB {
-  private static $link = null;
-  private static $result;
+  public static $link = null;
+  public static $result = null;
   public static $sql;
   public static $numQueries = 0;
 
   private static function connect() {
-    self::$link = @mysql_connect( Config::$db['host'], Config::$db['user'], Config::$db['password'] )
-      or die( "Couldn't establish link to database-server: ".Config::$db['host'] );
-    mysql_select_db( Config::$db['database'] )
-      or die( "Couldn't select Database: ".Config::$db['database'] );
-    mysql_query( 'SET NAMES utf8', self::$link );
+    if (!is_null(self::$link))
+      return;
+
+    $db = Config::$db;
+    try {
+      self::$link = new PDO($db['datasource'], $db['user'], $db['password'],
+        array(
+          PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\'',
+          PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+          PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
+          PDO::ATTR_EMULATE_PREPARES => false
+        ));
+    } catch (PDOException $e) {
+      die('Couldn\'t establish PDO database connection: ' . $e->getMessage() . "\nconnection string: " . $db['datasource']);
+    }
   }
 
   public static function foundRows() {
-    $r = self::query( 'SELECT FOUND_ROWS() AS foundRows' );
-    return $r[0]['foundRows'];
+    $r = self::query_nofetch('SELECT FOUND_ROWS()');
+    try {
+      $rv = $r->fetchColumn();
+    } catch (Exception $ex) {
+    }
+
+    // finally
+    $r->closeCursor();
+
+    if (isset($ex))
+      throw $ex;
+
+    return $rv;
   }
 
   public static function numRows() {
-    return mysql_num_rows( self::$result );
+    /* This works only for some versions of MySQL (and MariaDB). Visit
+     * http://www.php.net/manual/en/pdostatement.rowcount.php for details.
+     */
+    return self::$result->rowCount();
   }
 
   public static function affectedRows() {
-    return mysql_affected_rows( self::$link );
+    return self::$result->rowCount();
   }
 
   public static function insertId() {
-    return mysql_insert_id( self::$link );
+    return self::$link->lastInsertId();
   }
 
-  public static function query( $q, $params = array() ) {
-    if( self::$link === null ) {
-      self::connect();
-    }
+  public static function query_nofetch( $q, $params = array() ) {
+    self::connect();
 
-    if( !is_array( $params ) ) {
+    if (!is_array($params))
       $params = array_slice( func_get_args(), 1 );
+
+    try {
+      if (self::$result)
+        self::$result->closeCursor();
+
+      if( empty( $params ) ) {
+        self::$result = $r = self::$link->query($q);
+      } else {
+        self::$result = $r = self::$link->prepare($q);
+        /*
+        foreach ($params as $k => $v) {
+          $type = (is_null($v) ? PDO::PARAM_NULL :
+            (is_int($v) ? PDO::PARAM_INT :
+            (is_bool($v) ? PDO::PARAM_BOOL :
+              PDO::PARAM_STRING)));
+          $r->bindParam(is_int($k) ? $k + 1 : ":$k", $v, $type);
+        }
+        */
+        $r->execute($params);
+      }
+      return $r;
+    } catch (PDOException $e) {
+      array_push($e->errorInfo, $q, $params);
+      throw $e;
+    }
+  }
+
+  public static function query( $q, &$params = array() ) {
+    if (!is_array($params))
+      $params = array_slice( func_get_args(), 1 );
+
+    $r = self::query_nofetch($q, $params);
+    try {
+      $rv = $r->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $ex) {
     }
 
-    if( !empty( $params ) ) {
-      $q = preg_replace('/:(\d+)/e', 'self::quote($params[$1 - 1])', $q );
-    }
-    self::$numQueries++;
-    self::$sql = $q;
-    self::$result = mysql_query( $q, self::$link );
+    // finally
+    $r->closeCursor();
 
-    echo self::getError();
-    if( !self::$result ) {
-      return false;
-    }
-    else if( !is_resource( self::$result ) ) {
-      return true;
-    }
+    if (isset($ex))
+      throw $ex;
 
-    $rset = array();
-    while ( $row = mysql_fetch_assoc( self::$result ) ) {
-      $rset[] = $row;
-    }
-    return $rset;
+    return $rv;
   }
 
   public static function getRow( $q, $params = array() ) {
-    if( !is_array( $params ) ) {
+    if (!is_array($params))
       $params = array_slice( func_get_args(), 1 );
+
+    $r = self::query_nofetch($q, $params);
+    try {
+      $rv = $r->fetch(PDO::FETCH_ASSOC);
+    } catch (Exception $ex) {
     }
 
-    $r = self::query( $q, $params );
-    return array_shift( $r );
+    // finally
+    $r->closeCursor();
+
+    if (isset($ex))
+      throw $ex;
+
+    return $rv;
   }
 
-  public static function updateRow( $table, $idFields, $updateFields ) {
-    $updateString = implode( ',', self::quoteArray( $updateFields, true ) );
-    $idString = implode( ' AND ', self::quoteArray( $idFields, true ) );
-    return self::query( "UPDATE $table SET $updateString WHERE $idString" );
+  public static function updateRow( $table, $idFields, $updateFields )
+  {
+    assert(is_array($idFields) && !empty($idFields) && !isset($idFields[0]));
+    assert(is_array($updateFields) && !empty($updateFields) && !isset($updateFields[0]));
+
+    $escape_identifier = __CLASS__.'::escape_identifier';
+    $r = self::query_nofetch(
+      'UPDATE ' . escape_identifier($table) . '
+      SET ' . join('=?, ', array_map($escape_identifier, array_keys($updateFields))) . '=?
+      WHERE ' . join('=?, ', array_map($escape_identifier, array_keys($idFields))) . '=?',
+      array_merge(array_values($updateFields), array_values($idFields)));
+
+    return $r->rowCount();
   }
 
-  public static function insertRow( $table, $insertFields ) {
-    $insertString = implode( ',', self::quoteArray( $insertFields, true ) );
-    return self::query( "INSERT INTO $table SET $insertString" );
+  public static function insertRow( $table, $insertFields )
+  {
+    assert(is_array($insertFields) && !empty($insertFields));
+
+    $q = 'INSERT INTO ' . escape_identifier($table);
+    if (!isset($insertFields[0])) {
+      $q .= ' (' . join(', ', array_map(__CLASS__.'::escape_identifier', array_keys($insertFields))) . ')';
+    }
+    $q .= ' VALUES (' . join(', ', array_fill(0, count($insertFields), '?')) . ')';
+
+    return self::query_nofetch($q, array_values($insertFields));
   }
 
-  public static function getError() {
-    if( $e = mysql_error( self::$link ) ) {
-      return "MySQL reports: '$e' on query\n".self::$sql;
-    }
-    return false;
-  }
-
-  public static function quote( $s ) {
-    if( self::$link === null ) {
-      self::connect();
-    }
-    if( !isset($s) || $s === false ) {
-      return 0;
-    }
-    else if( $s === true ) {
-      return 1;
-    }
-    else if( is_numeric( $s ) ) {
-      return $s;
-    }
-    else {
-      return "'".mysql_real_escape_string( $s )."'";
-    }
-  }
-
-  public static function quoteArray( &$fields, $useKeys = false ) {
-    $r = array();
-    foreach( $fields as $key => &$value ) {
-      $r[] = ( $useKeys ? "`$key`=":'' ) . self::quote( $value );
-    }
-    return $r;
+  public static function escape_identifier( $name )
+  {
+    return '`' . str_replace('`', '``', $name) . '`';
   }
 }
 
