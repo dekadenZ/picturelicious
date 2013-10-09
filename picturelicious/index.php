@@ -43,10 +43,9 @@ if(
 ) {
   if( Config::$vbbIntegration['enabled'] ) { require_once( 'lib/class.forumops.php' ); }
 }
-$user = new User();
-$user->login();
+$user = User::getInstance();
 
-if( $user->id ) {
+if (!$user) {
   // Don't cache pages for logged-in users
   $cache->disable();
 }
@@ -59,14 +58,14 @@ $r = explode( '/', $query );
 if( $r[0] == 'login' ) { //---------------------------------------- login
   if( Config::$vbbIntegration['enabled'] ) { require_once( 'lib/class.forumops.php' ); }
   if( !empty( $r[1] ) ) {
-    if( $user->validate($r[1]) ) {
+    if ($user && $user->validate($r[1])) {
       header( 'location: '.Config::$absolutePath );
     } else {
       header( 'location: '.Config::$absolutePath.'login' );
     }
     exit(0);
   }
-  if( $user->id ) {
+  if ($user) {
     header( 'location: '.Config::$absolutePath );
     exit();
   }
@@ -90,19 +89,22 @@ else if( $r[0] == 'static' ) {
 }
 
 else if( $r[0] == 'logout' ) { //---------------------------------- logout
-  if( Config::$vbbIntegration['enabled'] ) { require_once( 'lib/class.forumops.php' ); }
-  $user->logout();
+  if ($user) {
+    if( Config::$vbbIntegration['enabled'] ) { require_once( 'lib/class.forumops.php' ); }
+    $user->logout();
+  }
   header( 'location: '.Config::$absolutePath );
   exit();
 }
 
 else if( $r[0] == 'register' ) { //-------------------------------- new user
   if( Config::$vbbIntegration['enabled'] ) { require_once( 'lib/class.forumops.php' ); }
-  if( $user->id ) {
+  if ($user) {
     header( 'location: '.Config::$absolutePath );
     exit();
   }
 
+  $user = new User;
   if( isset($_POST['register']) && $user->register( $messages ) ) {
     include( Config::$templates.'registered.tpl.php' );
   } else {
@@ -132,7 +134,9 @@ else if( //----------------------------------------------------- view
   $iv->load();
 
   // Add comment if we have one
-  if( $_POST['addComment'] && $iv->addComment($user->id, $_POST['content']) ) {
+  if ($user && $_POST['addComment'] &&
+    $iv->addComment($user->id, $_POST['content']))
+  {
     $cache->clear( $iv->image['keyword'] );
     header( 'Location: '.Config::$absolutePath.$iv->basePath.'view/'.$iv->image['keyword'] );
     exit();
@@ -207,7 +211,7 @@ else if( $r[0] == 'random' ) {
 }
 
 else if( $r[0] == 'upload' ) {
-  if( $user->id ) {
+  if ($user) {
     $uploadErrors = array();
     if( $user->isSpamLocked() ) {
       $uploadErrors[] = 'No more than 10 images in 2 hours!';
@@ -237,7 +241,7 @@ else if( $r[0] == 'upload' ) {
 }
 
 else if( $r[0] == 'profile' ) {
-  if( $user->id ) {
+  if ($user) {
     if( Config::$vbbIntegration['enabled'] ) { require_once( 'lib/class.forumops.php' ); }
     $messages = array();
     if( !empty( $_POST ) ) {

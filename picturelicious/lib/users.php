@@ -101,84 +101,92 @@ class User
   }
 
 
-  public function login()
+  public static function getInstance()
+  {
+    return self::login();
+  }
+
+
+  public static function login()
   {
     // attempt to login via post, session or remember cookie
     session_name( Config::$sessionCookie );
 
-    return isset($_POST['login']) ?
-      $this->login_password() :
-      ($this->login_session() || $this->login_remember());
+    if (isset($_POST['login']))
+      return self::login_password();
+
+    $u = self::login_session();
+    if ($u !== false)
+      return $u;
+
+    return self::login_remember();
   }
 
 
-  private function login_password()
+  private static function login_password()
   {
     if (empty($_POST['name']) || empty($_POST['pass']))
       return false;
 
-    $this->name = $_POST['name'];
+    $name = $_POST['name'];
     $password = $_POST['pass'];
 
     $r = DB::query_nofetch(
-      'SELECT `id`, `admin`, `website`, `email`, `pass` AS `passwordHash`
+      'SELECT `name`, `id`, `admin`, `website`, `email`, `pass` AS `passwordHash`
        FROM ' . DB::escape_identifier(TABLE_USERS) .
       'WHERE `name` = ? AND `valid`',
-      array($this->name),
-      array(PDO::FETCH_INTO, &$this));
-    $success = $r->fetch() !== false;
+      array($name),
+      array(PDO::FETCH_INTO, new User));
+    $u = $r->fetch();
     $r->closeCursor();
     unset($r);
 
-    $success = $success && $this->check_password($password);
 
-    if ($success) {
-      session_start();
-      $this->__to_array($_SESSION);
-
+    if ($u !== false && $u->check_password($password)) {
       if (filter_input(INPUT_POST, 'remember', FILTER_VALIDATE_BOOLEAN))
-        $this->update_remember();
+        $u->update_remember();
+
+      session_start();
+      $_SESSION['user'] = $u;
 
       if( Config::$vbbIntegration['enabled'] ) {
         global $vbulletin;
         $forum = new ForumOps($vbulletin);
-        $forum->login(array('username' => $this->name));
+        $forum->login(array('username' => $u->name));
       }
     }
     else {
-      $this->reset();
+      $u = false;
     }
 
-    return $success;
+    return $u;
   }
 
 
-  private function login_session()
+  private static function login_session()
   {
-    if (empty($_COOKIE[Config::$sessionCookie]))
-      return false;
-
-    // session running
-    session_start();
-    $success = !empty($_SESSION['id']);
-    if ($success) {
-      $this->__from_array($_SESSION);
-    } else {
-      setcookie(Config::$sessionCookie, false, 1, Config::$absolutePath);
+    if (!empty($_COOKIE[Config::$sessionCookie])) {
+      // session running
+      session_start();
+      if (isset($_SESSION['user'])) {
+        return $_SESSION['user'];
+      } else {
+        setcookie(Config::$sessionCookie, false, 1, Config::$absolutePath);
+      }
     }
-    return $success;
+    return false;
   }
 
 
-  private function login_remember()
+  private static function login_remember()
   {
     if (empty($_COOKIE[Config::$rememberCookie]))
       return false;
 
-    $this->validationString =
+    $validationString =
       base64_decode($_COOKIE[Config::$rememberCookie], true);
 
-    if ($this->validationString === false) {
+    if ($validationString === false) {
       setcookie(Config::$sessionCookie, false, 1, Config::$absolutePath);
       return false;
     }
@@ -188,27 +196,28 @@ class User
       'SELECT `id`, `name`, `admin`, `website`, `email`
        FROM ' . DB::escape_identifier(TABLE_USERS) .
       'WHERE `remember` = ?',
-      array($this->validationString),
-      array(PDO::FETCH_INTO, &$this));
-    $success = $r->fetch() !== false;
+      array($validationString),
+      array(PDO::FETCH_INTO, new User));
+    $u = $r->fetch();
     $r->closeCursor();
     unset($r);
 
-    if ($success) {
-      session_start();
-      $this->__to_array($_SESSION);
-
+    if ($u !== false) {
       // refresh for another year
-      $this->update_remember($_COOKIE[Config::$rememberCookie]);
+      $u->validationString = $validationString;
+      $u->update_remember_cookie($_COOKIE[Config::$rememberCookie]);
+
+      session_start();
+      $_SESSION['user'] = $u;
 
       if( Config::$vbbIntegration['enabled'] ) {
         global $vbulletin;
         $forum = new ForumOps($vbulletin);
-        $forum->login(array('username' => $this->name));
+        $forum->login(array('username' => $u->name));
       }
     }
 
-    return $success;
+    return $u;
   }
 
 
@@ -221,7 +230,7 @@ class User
       (md5($password) === $this->passwordHash))
     {
       if (password_needs_rehash($this->passwordHash, PASSWORD_DEFAULT)) {
-        $this->passwordHash = password_hash($password, PASSWORD_DEFAULT);
+        $this->passwordHash = self::password_hash($password);
         $r = DB::query_nofetch(
           'UPDATE ' . DB::escape_identifier(TABLE_USERS) .
           'SET `pass` = ? WHERE `id` = ?',
@@ -231,6 +240,12 @@ class User
       return true;
     }
     return false;
+  }
+
+
+  private static function password_hash( $password )
+  {
+    return password_hash($password, PASSWORD_DEFAULT);
   }
 
 
