@@ -15,7 +15,7 @@
   Page: <?php echo $ib->pages['current']; ?> of <?php echo $ib->pages['total']; ?>
 </h1>
 
-<?php if( $ib->user['id'] ) {?>
+<?php if (isset($ib->user['id'])) { ?>
 <div class="userInfo">
   <img class="avatar" width="40" height="40" src="<?php echo Config::$absolutePath.$ib->user['avatar']; ?>"/>
   <div class="name">

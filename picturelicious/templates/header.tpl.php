@@ -1,7 +1,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html>
 <head>
-  <title><?php if( $iv && $iv->image && $iv->image['tags']){ echo htmlspecialchars($iv->image['tags'])?> - <?php } ?><?php echo Config::$siteTitle; ?></title>
+  <title><?php
+    if (!empty($iv->image['tags'])) {
+      echo htmlspecialchars($iv->image['tags']), ' – ';
+    }
+    echo Config::$siteTitle
+  ?></title>
   <link rel="stylesheet" type="text/css" href="<?php echo Config::$absolutePath; ?>media/styles.css" />
   <link rel="icon" href="<?php echo Config::$absolutePath; ?>media/favicon.ico"/>
   <link rel="search" type="application/opensearchdescription+xml" href="<?php echo Config::$absolutePath; ?>media/opensearch.php" title="<?php echo htmlspecialchars(Config::$siteName); ?>"/>
@@ -14,7 +19,7 @@
 
   <div class="search">
     <form action="<?php echo Config::$absolutePath; ?>" method="post" onsubmit="return s()">
-      <input type="text" name="q" value="<?php echo htmlspecialchars($term); ?>" id="q"/>
+      <input type="text" name="q" value="<?php echo htmlspecialchars(@$term); ?>" id="q"/>
       <input type="button" class="color" value="" onclick="swap($('colorpicker'),'hidden','visible')"/>
       <input type="submit" name="search" class="search" value="search"/>
 

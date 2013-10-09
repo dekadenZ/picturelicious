@@ -157,7 +157,7 @@ else if( //----------------------------------------------------- browse
   $ib = new ImageBrowser( Config::$images['thumbsPerPage'] );
 
   if( empty($r[0]) || $r[0] == 'all' ) { // /all/page/2
-    $ib->setPage( $r[2] );
+    $ib->setPage( @$r[2] );
   }
   else if( $r[0] == 'user' ) { // /user/name/page/2
     $ib->setPage( $r[3] );

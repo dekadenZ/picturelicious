@@ -13,7 +13,7 @@
     <dl class="form">
       <dt>Name:</dt>
       <dd>
-        <input type="text" name="name" value="<?php echo htmlspecialchars($_POST['name']); ?>"/>
+        <input type="text" name="name" value="<?php echo htmlspecialchars(@$_POST['name']); ?>"/>
       </dd>
 
       <dt>Password:</dt>
