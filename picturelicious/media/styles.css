@@ -210,15 +210,15 @@ div#images {
       position: absolute;
       overflow: hidden;
     }
-      .b0 {
+      .b0, .b0 > a > img {
         width: 192px;
         height: 192px;
       }
-      .b1 {
+      .b1, .b1 > a > img {
         width: 128px;
         height: 128px;
       }
-      .b2 {
+      .b2, .b2 > a > img {
         width: 64px;
         height: 64px;
       }
@@ -229,7 +229,7 @@ div#images {
       background-color: #fff;
     }
 
-    a.thumb:hover img {
+    a.thumb:hover > img {
       opacity: 0.8;
       filter: alpha( opacity = 80 );
     }
