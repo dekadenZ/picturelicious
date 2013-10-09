@@ -69,15 +69,26 @@ CREATE TABLE `pl_imageratings` (
   INDEX `user` (`user`) USING HASH
 ) ENGINE=InnoDB;
 
+CREATE TABLE `pl_favorite_images` (
+  `user` BIGINT UNSIGNED NOT NULL,
+  `image` BIGINT UNSIGNED NOT NULL,
+  PRIMARY KEY (`user`, `image`),
+  FOREIGN KEY (`user`) REFERENCES `pl_users` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`image`) REFERENCES `pl_images` (`id`) ON DELETE CASCADE,
+  KEY `image` (`image`) USING HASH
+) ENGINE=InnoDB;
+
 
 # Image ratings excluding votes by respective owners, including legacy ratings, aggregated by image
 CREATE VIEW `plv_images` AS
 SELECT i.*,
   COUNT(r.`rating`) + IFNULL(l.`votecount`, 0) AS `votecount`,
-  (IFNULL(SUM(r.`rating`), 0) + IFNULL(l.`rating`, 0) * IFNULL(l.`votecount`, 0)) / (COUNT(r.`rating`) + IFNULL(l.`votecount`, 0)) AS `rating`
+  (IFNULL(SUM(r.`rating`), 0) + IFNULL(l.`rating`, 0) * IFNULL(l.`votecount`, 0)) / (COUNT(r.`rating`) + IFNULL(l.`votecount`, 0)) AS `rating`,
+  COUNT(f.`user`) AS favorited_count
 FROM `pl_images` AS i
   LEFT OUTER JOIN `pl_imageratings` AS r ON i.`id` = r.`image`
   LEFT OUTER JOIN `pl_images_legacy` AS l ON i.`id` = l.`image`
+  LEFT OUTER JOIN `pl_favorite_images` AS f ON i.`id` = f.`image`
 WHERE r.`user` IS NULL OR i.`id` <> r.`user`
 GROUP BY i.`id`;
 
