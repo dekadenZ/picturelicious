@@ -38,7 +38,8 @@ CREATE TABLE `pl_images` (
   FOREIGN KEY (`user`) REFERENCES `pl_users` (`id`),
   INDEX `user` (`user`, `logged` DESC) USING BTREE,
   INDEX `keyword` (`keyword`) USING HASH,
-  INDEX `hash` (`hash`) USING HASH
+  INDEX `hash` (`hash`) USING HASH,
+  INDEX `logged` (`logged` DESC) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 CREATE VIEW `plv_uploadlimit` AS
@@ -85,10 +86,10 @@ CREATE VIEW `plv_images` AS
 SELECT i.*,
   COUNT(r.`rating`) + IFNULL(l.`votecount`, 0) AS `votecount`,
   (IFNULL(SUM(r.`rating`), 0) + IFNULL(l.`rating`, 0) * IFNULL(l.`votecount`, 0)) / (COUNT(r.`rating`) + IFNULL(l.`votecount`, 0)) AS `rating`,
-  COUNT(f.`user`) AS favorited_count
+  COUNT(f.`user`) AS `favorited_count`
 FROM `pl_images` AS i
-  LEFT OUTER JOIN `pl_imageratings` AS r ON i.`id` = r.`image`
   LEFT OUTER JOIN `pl_images_legacy` AS l ON i.`id` = l.`image`
+  LEFT OUTER JOIN `pl_imageratings` AS r FORCE INDEX (PRIMARY) ON i.`id` = r.`image`
   LEFT OUTER JOIN `pl_favorite_images` AS f ON i.`id` = f.`image`
 WHERE r.`user` IS NULL OR i.`id` <> r.`user`
 GROUP BY i.`id`;
