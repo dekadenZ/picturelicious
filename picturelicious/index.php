@@ -1,5 +1,5 @@
 <?php
-/* 
+/*
   Picturelicious
   (c) 2008 Dominic Szablewski
 */
@@ -22,8 +22,8 @@ if( !Config::$cache['enabled'] ) {
 
 // no session or remember cookie -> get the page from cache
 if(
-  empty($_COOKIE[Config::$sessionCookie]) && 
-  empty($_COOKIE[Config::$rememberCookie]) 
+  empty($_COOKIE[Config::$sessionCookie]) &&
+  empty($_COOKIE[Config::$rememberCookie])
 ) {
   $cache->lookup();
 }
@@ -34,12 +34,12 @@ require_once( 'lib/db.php' );
 
 // If the User logged in with POST or a remember cookie, we need forumops.php
 // to log him in the forum, too.
-if( 
-  isset($_POST['login']) || 
+if(
+  isset($_POST['login']) ||
   (
-    empty($_COOKIE[Config::$sessionCookie]) && 
+    empty($_COOKIE[Config::$sessionCookie]) &&
     !empty($_COOKIE[Config::$rememberCookie])
-  ) 
+  )
 ) {
   if( Config::$vbbIntegration['enabled'] ) { require_once( 'lib/class.forumops.php' ); }
 }
@@ -94,7 +94,7 @@ else if( $r[0] == 'logout' ) { //---------------------------------- logout
   $user->logout();
   header( 'location: '.Config::$absolutePath );
   exit();
-} 
+}
 
 else if( $r[0] == 'register' ) { //-------------------------------- new user
   if( Config::$vbbIntegration['enabled'] ) { require_once( 'lib/class.forumops.php' ); }
@@ -150,7 +150,7 @@ else if( //----------------------------------------------------- view
 }
 
 else if( //----------------------------------------------------- browse
-  empty($r[0]) || 
+  empty($r[0]) ||
   in_array( $r[0], array('all', 'user', 'search') )
 ) {
   require_once( 'lib/imagebrowser.php' );
@@ -214,13 +214,13 @@ else if( $r[0] == 'upload' ) {
     }
     else if( !empty( $_POST ) ) {
       require_once( 'lib/imageuploader.php' );
-      if( 
-        ( 
-          !empty($_POST['url']) && 
-          ImageUploader::copyFromUrl( $_POST['url'], $_POST['tags'], false, $uploadErrors) 
+      if(
+        (
+          !empty($_POST['url']) &&
+          ImageUploader::copyFromUrl( $_POST['url'], $_POST['tags'], false, $uploadErrors)
         ) ||
-        ( 
-          !empty($_FILES['image']['name']) && 
+        (
+          !empty($_FILES['image']['name']) &&
           ImageUploader::process($_FILES['image']['name'], $_FILES['image']['tmp_name'], $_POST['tags'], true, $uploadErrors)
         )
       ) {

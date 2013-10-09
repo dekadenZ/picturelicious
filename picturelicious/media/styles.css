@@ -74,8 +74,8 @@ img#logo {
   float: left;
 }
 
-img { 
-  border: 0; 
+img {
+  border: 0;
 }
 
 div#content {
@@ -523,7 +523,7 @@ fieldset {
 
 
 pre {
-  font-family: Bitstream Vera Sans Mono, Courier New, Lucida Console, monospace; 
+  font-family: Bitstream Vera Sans Mono, Courier New, Lucida Console, monospace;
   font-size: 9pt;
   border-top: 1px solid #444;
   border-bottom: 1px solid #333;

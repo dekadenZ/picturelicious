@@ -40,7 +40,7 @@
     <a href="<?php echo Config::$absolutePath; ?>users">Users</a>
     <a href="<?php echo Config::$absolutePath; ?>comments">Comments</a>
     <a href="<?php echo Config::$absolutePath; ?>quicktags">Quick-Tagging</a>
-    <a href="<?php echo Config::$absolutePath; ?>static/bookmarklet">Bookmarklet</a> 
+    <a href="<?php echo Config::$absolutePath; ?>static/bookmarklet">Bookmarklet</a>
     <?php if( Config::$vbbIntegration['enabled'] ) { ?>
       <a href="<?php echo Config::$absolutePath; ?>forum/">Forum</a>
     <?php } ?>
@@ -53,8 +53,8 @@
       (<a href="<?php echo Config::$absolutePath; ?>profile">profile</a> /
       <a href="<?php echo Config::$absolutePath; ?>logout">logout</a>)
     <?php } else { ?>
-      Hello Anonymous 
-      (<a href="<?php echo Config::$absolutePath; ?>login">login</a> / 
+      Hello Anonymous
+      (<a href="<?php echo Config::$absolutePath; ?>login">login</a> /
       <a href="<?php echo Config::$absolutePath; ?>register">register</a>)
     <?php } ?>
     <?php if( $user->admin ) { ?>
