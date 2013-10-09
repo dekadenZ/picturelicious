@@ -73,20 +73,31 @@ class DB {
     return self::$link->lastInsertId();
   }
 
-  public static function query_nofetch( $q, $params = array() ) {
-    self::connect();
-
-    if (!is_array($params))
+  public static function query_nofetch( $q, $params = array(),
+    $fetch_mode = null )
+  {
+    if (!is_array($params)) {
       $params = array_slice( func_get_args(), 1 );
+      $fetch_mode = null;
+    } else {
+      assert(is_null($fetch_mode) || is_array($fetch_mode));
+    }
+
+    self::connect();
 
     try {
       if (self::$result)
         self::$result->closeCursor();
 
-      if( empty( $params ) ) {
+      if (empty($params) && empty($fetch_mode)) {
         self::$result = $r = self::$link->query($q);
       } else {
         self::$result = $r = self::$link->prepare($q);
+
+        if (!empty($fetch_mode)) {
+          call_user_func_array(array($r, 'setFetchMode'), $fetch_mode);
+        }
+
         /*
         foreach ($params as $k => $v) {
           $type = (is_null($v) ? PDO::PARAM_NULL :
@@ -96,6 +107,7 @@ class DB {
           $r->bindParam(is_int($k) ? $k + 1 : ":$k", $v, $type);
         }
         */
+
         $r->execute($params);
       }
       return $r;
@@ -105,13 +117,12 @@ class DB {
     }
   }
 
-  public static function query( $q, &$params = array() ) {
-    if (!is_array($params))
-      $params = array_slice( func_get_args(), 1 );
-
-    $r = self::query_nofetch($q, $params);
+  public static function query( $q, $params = array(),
+    $fetch_mode = array(PDO::FETCH_ASSOC) )
+  {
+    $r = call_user_func_array(__CLASS__.'::query_nofetch', func_get_args());
     try {
-      $rv = $r->fetchAll(PDO::FETCH_ASSOC);
+      $rv = $r->fetchAll();
     } catch (Exception $ex) {
     }
 
@@ -124,13 +135,12 @@ class DB {
     return $rv;
   }
 
-  public static function getRow( $q, $params = array() ) {
-    if (!is_array($params))
-      $params = array_slice( func_get_args(), 1 );
-
-    $r = self::query_nofetch($q, $params);
+  public static function getRow( $q, $params = array(),
+    $fetch_mode = array(PDO::FETCH_ASSOC) )
+  {
+    $r = call_user_func_array(__CLASS__.'::query_nofetch', func_get_args());
     try {
-      $rv = $r->fetch(PDO::FETCH_ASSOC);
+      $rv = $r->fetch();
     } catch (Exception $ex) {
     }
 
