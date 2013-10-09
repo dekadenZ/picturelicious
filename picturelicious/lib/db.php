@@ -1,16 +1,23 @@
 <?php
-
-/*
-  This class handles all database IO. To prevent SQL-Injections, all variables
-  that are passed to the database must be specified as additional parameters to
-  your query. e.g.
-  $res = DB::query( 'SELECT * FROM images WHERE user = :1 AND tags LIKE :2', 'testuser', 'funny' );
-
-  query() and getRow() return a 2-dimensional array instead of a result resource.
-*/
-
 require_once( 'lib/config.php' );
 
+/*
+ * This class handles all database IO via the PDO API. To prevent SQL injection
+ * attacks all variables should be passed as additional parameters. The query
+ * is then transformed to a prepared statement.
+
+ * Example:
+ *   $res = DB::query(
+ *     'SELECT * FROM `images` WHERE `user` = ? AND `tags` LIKE ?',
+ *     $user, $_GET['q']);
+ *
+ * or:
+ *   $res = DB::query(
+ *     'SELECT * FROM `images` WHERE `user` = :user AND `tags` LIKE :search',
+ *     array('user' => $user, 'search' => $_GET['q']));
+ *
+ * query() and getRow() return a 2-dimensional array instead of a result resource.
+ */
 class DB {
   public static $link = null;
   public static $result = null;
