@@ -59,7 +59,7 @@ CREATE TABLE `pl_images_legacy` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 
-CREATE TABLE pl_imageratings (
+CREATE TABLE `pl_imageratings` (
   `image` BIGINT UNSIGNED NOT NULL,
   `user` BIGINT UNSIGNED NOT NULL,
   `rating` TINYINT NOT NULL,
@@ -84,6 +84,7 @@ GROUP BY i.`id`;
 
 CREATE TABLE `pl_comments` (
   `id` SERIAL,
+  `parent` BIGINT UNSIGNED,
   `imageId` BIGINT UNSIGNED NOT NULL,
   `userId` BIGINT UNSIGNED NOT NULL,
   `created` BIGINT NOT NULL,
@@ -93,7 +94,8 @@ CREATE TABLE `pl_comments` (
   FOREIGN KEY (`userId`) REFERENCES `pl_users` (`id`),
   FOREIGN KEY (`imageId`) REFERENCES `pl_images` (`id`) ON DELETE CASCADE,
   INDEX `image` (`imageId`) USING HASH,
-  INDEX `user` (`userId`) USING HASH
+  INDEX `user` (`userId`) USING HASH,
+  INDEX `parent` (`parent`) USING HASH
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 
