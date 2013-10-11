@@ -1,6 +1,7 @@
 <?php
 require_once( 'lib/config.php' );
 require_once( 'lib/db.php' );
+require_once( 'lib/base64.php' );
 
 /*
  * An object of this class represents a user on the site. All user
@@ -183,8 +184,8 @@ class User
     if (empty($_COOKIE[Config::$rememberCookie]))
       return false;
 
-    $validationString =
-      base64_decode($_COOKIE[Config::$rememberCookie], true);
+    $validationString = Base64::decode($_COOKIE[Config::$rememberCookie],
+        Base64::URI, self::VALIDATIONSTRING_BYTES);
 
     if ($validationString === false) {
       setcookie(Config::$sessionCookie, false, 1, Config::$absolutePath);
@@ -249,9 +250,12 @@ class User
   }
 
 
+  const VALIDATIONSTRING_BYTES = 16;
+
   private function update_remember()
   {
-    $this->validationString = mcrypt_create_iv(16, MCRYPT_DEV_URANDOM);
+    $this->validationString =
+      mcrypt_create_iv(self::VALIDATIONSTRING_BYTES, MCRYPT_DEV_URANDOM);
     $this->update_remember_db();
     $this->update_remember_cookie();
   }
@@ -268,7 +272,8 @@ class User
   private function update_remember_cookie( $remember = null )
   {
     if (is_null($remember))
-      $remember = base64_encode($this->validationString);
+      $remember = Base64::encode($this->validationString,
+        Base64::URI | Base64::FIXED);
 
     setcookie(Config::$rememberCookie, $remember,
       time() + 3600 * 24 * 365, Config::$absolutePath);
