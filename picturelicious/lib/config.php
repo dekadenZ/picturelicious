@@ -87,6 +87,12 @@ class Config {
       'b0' => array( 'width'=>3, 'height'=>3, 'percentage'=>0.05, 'dir'=>'192x192' )
     ),
   );
+
+
+  public static function is_debug()
+  {
+    return parse_url(self::$frontendPath, PHP_URL_HOST) === 'localhost';
+  }
 }
 
 
