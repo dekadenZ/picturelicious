@@ -32,13 +32,13 @@
     <dl class="form">
       <dt>Name:</dt>
       <dd>
-        <input type="text" name="name" value="<?php echo htmlspecialchars($_POST['name']); ?>"/> 
+        <input type="text" name="name" value="<?php echo htmlspecialchars(@$_POST['name']); ?>"/>
         Only letters and numbers; at least 2 characters long
       </dd>
 
       <dt>E-Mail:</dt>
       <dd>
-        <input type="text" name="email" value="<?php echo htmlspecialchars($_POST['email']); ?>"/> 
+        <input type="text" name="email" value="<?php echo htmlspecialchars(@$_POST['email']); ?>"/>
         Must be valid!
       </dd>
 
