@@ -32,7 +32,8 @@ class DB {
     try {
       self::$link = new PDO($db['datasource'], $db['user'], $db['password'],
         array(
-          PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\'',
+          PDO::MYSQL_ATTR_INIT_COMMAND =>
+            "SET NAMES 'UTF8' COLLATE 'utf8_unicode_ci'",
           PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
           PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
           PDO::ATTR_EMULATE_PREPARES => false

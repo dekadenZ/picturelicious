@@ -1,3 +1,7 @@
+CREATE DATABASE `picturelicious` DEFAULT CHARACTER SET utf8 DEFAULT COLLATE=utf8_unicode_ci;
+USE `picturelicious`;
+
+
 CREATE TABLE `pl_users` (
   `id` SERIAL,
   `registered` BIGINT NOT NULL,
@@ -11,7 +15,7 @@ CREATE TABLE `pl_users` (
   `email` VARCHAR(255),
   PRIMARY KEY  (`id`),
   UNIQUE KEY `name` (`name`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB;
 
 # Legacy user scores
 CREATE TABLE `pl_users_legacy` (
@@ -40,7 +44,7 @@ CREATE TABLE `pl_images` (
   INDEX `keyword` (`keyword`) USING HASH,
   INDEX `hash` (`hash`) USING HASH,
   INDEX `logged` (`logged` DESC) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB;
 
 CREATE VIEW `plv_uploadlimit` AS
 SELECT `user`, IF(COUNT(`logged`) >= 10, UNIX_TIMESTAMP() - MIN(`logged`) + 2*3600, 0) AS next_upload_time
@@ -57,7 +61,7 @@ CREATE TABLE `pl_images_legacy` (
   `tags` TEXT,
   PRIMARY KEY (`image`),
   FOREIGN KEY (`image`) REFERENCES `pl_images` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB;
 
 
 CREATE TABLE `pl_imageratings` (
@@ -109,7 +113,7 @@ CREATE TABLE `pl_comments` (
   INDEX `image` (`imageId`) USING HASH,
   INDEX `user` (`userId`) USING HASH,
   INDEX `parent` (`parent`) USING HASH
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB;
 
 
 CREATE TABLE `pl_commentratings` (
@@ -153,7 +157,7 @@ CREATE TABLE `pl_tags` (
   FOREIGN KEY (`image`) REFERENCES `pl_images` (`id`) ON DELETE CASCADE,
   INDEX `tag` (`tag`) USING BTREE,
   INDEX `author` (`author`) USING HASH
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB;
 
 
 # Log of "quick tag" actions to prevent repetition
@@ -247,4 +251,4 @@ CREATE TABLE `pl_absuses` (
   `comment` TEXT DEFAULT NULL,
   PRIMARY KEY (`type`, `abusedId`, `author`)
   #FOREIGN KEY (`author`) REFERENCES `pl_users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB;
