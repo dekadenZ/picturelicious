@@ -5,7 +5,8 @@ SELECT `id`, UNIX_TIMESTAMP(`registered`), `name`,
 	NULLIF(`avatar`, 'data/avatars/default.png'),
 	NULLIF(`website`, ''),
 	NULLIF(`email`, '')
-FROM `lowbird`.`lb_users`;
+FROM `lowbird`.`lb_users`
+WHERE `valid`;
 
 INSERT INTO `pl_users_legacy`
 SELECT `id`, `score`
