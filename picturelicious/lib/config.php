@@ -9,7 +9,7 @@ class Config {
 
   // Names and URLs for your installation
   public static $absolutePath = '/picturelicious/';
-  public static $frontendPath = 'http://localhost:8080/';
+  public static $frontendPath = 'http://localhost:8080/picturelicious/';
   public static $siteName = 'Picturelicious';
   public static $siteTitle = 'Picturelicious – Social Imaging';
 
