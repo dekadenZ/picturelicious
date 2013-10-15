@@ -4,6 +4,10 @@
   <fieldset>
     <legend>Change profile</legend>
 
+    <?php if( isset($messages['wrongLogin']) ) { ?>
+      <div class="warn">You need to enter your current password to perform these changes.</div>
+    <?php } ?>
+
     <?php if( isset($messages['passToShort']) ) { ?>
       <div class="warn">Your password must be at least 6 characters long!</div>
     <?php } ?>
@@ -16,19 +20,27 @@
       <div class="warn">Your avatar image could not be processed!</div>
     <?php } ?>
 
+    <?php if( isset($messages['confirmationEmailSent']) ) { ?>
+      <div class="success">We sent you an e-mail to
+        <?php echo htmlspecialchars($user->email) ?>
+        with a link to confirm your changes.</div>
+    <?php } ?>
+
     <dl class="form">
-      <dt>Password:</dt>
+      <dt>Current password:</dt>
+      <dd>
+        <input type="password" name="pass" /> (leave empty, if you don't want to change your password or e-mail address)
+      </dd>
+
+      <dt>New password:</dt>
       <dd>
         <input type="password" name="cpass" /> (leave empty, if you don't want to change it)
       </dd>
 
-      <dt>(Repeat)</dt>
+      <dt>Repeat new password</dt>
       <dd>
         <input type="password" name="cpass2" />
       </dd>
-
-      <dt>&nbsp;</dt>
-      <dd>&nbsp;</dd>
 
       <?php if( empty($user->email) ) { ?>
         <dt>E-mail:</dt>
@@ -44,7 +56,7 @@
 
       <dt>Avatar:</dt>
       <dd>
-        <input type="file" name="avatar" style="color: #000; background-color: #fff;"/><br/> 
+        <input type="file" name="avatar" style="color: #000; background-color: #fff;"/><br/>
       </dd>
 
       <dt>&nbsp;</dt>

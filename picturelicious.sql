@@ -14,7 +14,8 @@ CREATE TABLE `pl_users` (
   `website` VARCHAR(1023),
   `email` VARCHAR(255),
   PRIMARY KEY  (`id`),
-  UNIQUE KEY `name` (`name`) USING BTREE
+  UNIQUE KEY `name` (`name`) USING BTREE,
+  UNIQUE KEY `remember` (`remember`) USING HASH
 ) ENGINE=InnoDB;
 
 # Legacy user scores
@@ -23,6 +24,20 @@ CREATE TABLE `pl_users_legacy` (
   `score` BIGINT NOT NULL,
   PRIMARY KEY (`user`),
   FOREIGN KEY (`user`) REFERENCES `pl_users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+
+# Separate table for validation requests to keep the original values and
+# restore them if necessary
+CREATE TABLE `pl_user_validation_requests` (
+  `user` BIGINT UNSIGNED NOT NULL,
+  `token` BINARY(16),
+  `pass` VARBINARY(255),
+  `email` VARCHAR(255),
+  `time` BIGINT NOT NULL,
+  PRIMARY KEY (`user`),
+  FOREIGN KEY (`user`) REFERENCES `pl_users` (`id`) ON DELETE CASCADE,
+  UNIQUE KEY `token` (`token`) USING HASH
 ) ENGINE=InnoDB;
 
 

@@ -44,12 +44,12 @@
 
       <dt>Password:</dt>
       <dd>
-        <input type="password" name="pass" class="pass"/>
+        <input type="password" name="cpass" class="pass"/>
       </dd>
 
       <dt>(Repeat)</dt>
       <dd>
-        <input type="password" name="pass2" class="pass"/>
+        <input type="password" name="cpass2" class="pass"/>
       </dd>
 
       <dt>&nbsp;</dt>

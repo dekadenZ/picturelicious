@@ -457,12 +457,21 @@ a.textNext, div.textNoNext {
 /* Forms
 ---------------------------------------------------------*/
 
-div.warn {
-  background-color: #7a0d00;
+.warn, .success {
   padding: 0.1em 0.4em;
-  border: 1px solid #fd5c6a;
+  border: 1px solid;
   color: #fff;
   margin: 2em;
+}
+
+.warn {
+  background-color: #7a0d00;
+  border-color: #fd5c6a;
+}
+
+.success {
+  background-color: green;
+  border-color: lightgreen;
 }
 
 input {

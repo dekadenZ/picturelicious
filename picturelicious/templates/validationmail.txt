@@ -1,0 +1,16 @@
+From: Picturelicious <no-reply@picturelicious.net>
+Subject: Please confirm your changes on %siteName%
+
+Hello %userName%,
+
+we need to confirm the following change(s) to your account:
+%changes%
+
+If you requested these changes at %changetime%, please click the following link: %frontendPath%%validationURI%
+
+Otherwise your account was likely compromised and you need to log into your
+account and change your password at %frontendPath%profile.
+
+Note: All previous confirmation links for this account are now invalid.
+
+Your %siteName% Team

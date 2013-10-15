@@ -1,7 +1,11 @@
 <?php
 require_once( 'lib/config.php' );
 require_once( 'lib/db.php' );
-require_once( 'lib/base64.php' );
+require_once('lib/base64.php');
+require_once('lib/password.php');
+require_once('lib/http.php');
+require_once('lib/string.php');
+
 
 /*
  * An object of this class represents a user on the site. All user
@@ -17,8 +21,11 @@ class User
   public $website;
   public $email;
 
-  private $validationString = null;
-  private $passwordHash = null;
+  private $validationString;
+  private $passwordHash;
+
+  // set whenever this object differs from it's database representation
+  private $modified;
 
 
   public function __construct() {
@@ -60,44 +67,50 @@ class User
   }
 
 
-  public function reset()
+  private function __to_array_all()
   {
-    $this->name = null;
-    $this->id = null;
-    $this->admin = null;
-    $this->website = null;
-    $this->email = null;
-    $this->validationString = null;
-    $this->passwordHash = null;
+    $a = array();
+    foreach ($this as $prop => $value) {
+      if (!is_null($value))
+        $a[$prop] = $value;
+    }
+    return $a;
   }
 
 
-  public function validate( $id ) {
-    $u = DB::getRow(
-      'SELECT id, name, admin, website FROM '.TABLE_USERS.' WHERE valid = 0 AND remember = :1',
-      $id
-    );
+  public function reset()
+  {
+    foreach ($this as &$value)
+      $value = null;
+  }
 
-    if( empty($u) ) {
+
+  public function validate( $id )
+  {
+    $validationString =
+      Base64::decode($id, Base64::URI, self::VALIDATIONSTRING_BYTES);
+
+    if ($validationString === false)
       return false;
-    }
 
-    DB::updateRow( TABLE_USERS, array('id' => $u['id']), array( 'valid' => 1) );
+    $rv = DB::getRow(
+      'CALL pl_validate_user_change(?, TRUE)',
+      array($validationString),
+      array(PDO::FETCH_INTO, $this));
+    if ($rv === false)
+      return false;
+    unset($rv);
 
     session_name( Config::$sessionCookie );
     session_start();
-    $_SESSION['id'] = $this->id = $u['id'];
-    $_SESSION['name'] = $this->name = $u['name'];
-    $_SESSION['admin'] = $this->admin = $u['admin'];
-    $_SESSION['website'] = $this->website = $u['website'];
-
-    setcookie( Config::$rememberCookie, $id, time() + 3600 * 24 * 365, Config::$absolutePath );
+    $_SESSION['user'] = $this;
 
     if( Config::$vbbIntegration['enabled'] ) {
       global $vbulletin;
       $forum = new ForumOps($vbulletin);
-      $forum->login(array('username' => $u['name']));
+      $forum->login(array('username' => $this->name));
     }
+
     return true;
   }
 
@@ -222,13 +235,40 @@ class User
   }
 
 
-  private function check_password( $password )
+  private function check_password( $password, $fetch = false )
   {
+    if (empty($password))
+      return false;
+
+    if (empty($this->passwordHash)) {
+      if ($fetch && !is_null($this->id)) {
+          try {
+            $r = DB::query_nofetch(
+              'SELECT `pass` FROM ' . DB::escape_identifier(TABLE_USERS) .
+              'WHERE `id` = ?',
+              $this->id);
+            $this->passwordHash = $r->fetchColumn();
+          } catch (Exception $e) {
+          }
+
+          // finally
+          $r->closeCursor();
+          unset($r);
+
+          if (isset($e))
+            throw $e;
+      }
+      else {
+        return null;
+      }
+    }
+
     require_once('lib/password.php');
 
-    if (($this->passwordHash[0] === '$') ?
-      password_verify($password, $this->passwordHash) :
-      (md5($password) === $this->passwordHash))
+    if (!empty($this->passwordHash) &&
+      ($this->passwordHash[0] === '$') ?
+        password_verify($password, $this->passwordHash) :
+        (md5($password) === $this->passwordHash))
     {
       if (password_needs_rehash($this->passwordHash, PASSWORD_DEFAULT)) {
         $this->passwordHash = self::password_hash($password);
@@ -252,10 +292,15 @@ class User
 
   const VALIDATIONSTRING_BYTES = 16;
 
-  private function update_remember()
+  private function makeValidationString()
   {
     $this->validationString =
       mcrypt_create_iv(self::VALIDATIONSTRING_BYTES, MCRYPT_DEV_URANDOM);
+  }
+
+  private function update_remember()
+  {
+    $this->makeValidationString();
     $this->update_remember_db();
     $this->update_remember_cookie();
   }
@@ -280,56 +325,209 @@ class User
   }
 
 
-  public function profile( $localFile, &$messages ) {
-    $upd = array( 'website' => $_POST['website'] );
-
-    $_SESSION['website'] = $_POST['website'];
-
-    if( Config::$vbbIntegration['enabled'] ) {
-      global $vbulletin;
-      $forum = new ForumOps($vbulletin);
-    }
-
-    $p = trim($_POST['cpass']);
-    if( !empty( $p ) ) {
-      if( strlen($_POST['cpass']) < 6 ) {
+  private function filter_password( &$messages )
+  {
+    $pass = @$_POST['cpass'];
+    if (!empty($pass)) {
+      if (strlen($pass) < 6 ) {
         $messages['passToShort'] = true;
-      }
-      else if( $_POST['cpass'] != $_POST['cpass2'] ) {
+      } else if ($pass != @$_POST['cpass2'] ) {
         $messages['passNotEqual'] = true;
-      }
-      else {
-        $upd['pass'] = md5($_POST['cpass2']);
-        if( Config::$vbbIntegration['enabled'] ) {
-          $forum->set_pass( $_SESSION['name'], $_POST['cpass2']);
-        }
-      }
-    }
-
-    if( !empty( $localFile ) ) {
-      require_once( 'lib/images.php' );
-      $name = Config::$images['avatarsPath'].uniqid().'.jpg';
-      if( Image::createThumb( $localFile, $name, 40,40 ) ) {
-        $upd['avatar'] = $name;
       } else {
-        $messages['avatarFailed'] = true;
+        return $pass;
       }
+      return false;
     }
+    return null;
+  }
 
-    if( empty($this->email) &&
-      preg_match('/^[\.\w\-\+]{1,}@[\.\w\-]{2,}\.[\w]{2,}$/', $_POST['email'])
-    ) {
-      if( Config::$vbbIntegration['enabled'] ) {
-        $forum->set_email( $_SESSION['name'], $_POST['email']);
-      }
-      $upd['email'] = $_POST['email'];
+  private function filter_email( &$messages )
+  {
+    $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+    if ((empty($email) && empty($this->email)) || $email === false) {
+      $email = false;
+      $messages['wrongEmail'] = true;
+    } else if ($email == $this->email) {
+      $email = null;
     }
+    return $email;
+  }
 
-    DB::updateRow( TABLE_USERS, array( 'id' => $this->id ), $upd );
+  private function filter_name ( &$messages )
+  {
+    $name =
+      filter_input(INPUT_POST, 'name', FILTER_VALIDATE_REGEXP,
+        array('options' => array('regexp' => '/^[\w\|]{2,20}$/')));
+    if ($name === false)
+      $messages['nameInvalid'] = true;
+    return $name;
   }
 
 
-  public function logout() {
+  public function profile( $avatarLocalFile, &$messages )
+  {
+    list($update, $update_restricted) =
+        $this->profile_validate($avatarLocalFile, $messages);
+
+    return (bool)(
+      $this->profile_commit($update, $messages) |
+      $this->profile_commit_restricted($update_restricted, $messages));
+  }
+
+
+  private function profile_commit( $update, &$messages )
+  {
+    if (empty($update))
+      return false;
+
+    $rv =
+      DB::updateRow(TABLE_USERS, array('id' => $this->id),
+        array_map(function($value) {
+            return $value !== '' ? $value : null;
+          },
+          $update));
+    assert($rv === 1);
+    $this->__from_array($update);
+    return true;
+  }
+
+
+  private function profile_commit_restricted( $update, &$messages )
+  {
+    if (empty($update) ||
+      !array_reduce($update, 'logical_or', false))
+    {
+      return false;
+    }
+
+    if ($update['pass']) {
+      $update['pass'] =
+        self::password_hash($update['pass']);
+    }
+
+    $this->makeValidationString();
+    $update['token'] = $this->validationString;
+    $update['user'] = $this->id;
+    $update['time'] = time();
+
+    $rv = DB::insertRow('pl_user_validation_requests', $update, true);
+    assert(in_array($rv->rowCount(), array(1, 2), true));
+    unset($rv);
+    $this->modified = false;
+
+    $changes = array();
+    if ($update['email'])
+      $changes[] = 'e-mail address: ' . $update['email'];
+    if ($update['pass'])
+      $changes[] = 'new password';
+
+    if (!$this->send_validation_request(
+      file_get_contents(Config::$templates . 'validationmail.txt'),
+      array(
+        '%changes%' => ' - ' . join("\n - ", $changes),
+        '%changetime%' => date(DATE_RFC822, $update['time'])))
+    ) {
+      http_status(500, 'Internal Server Error');
+      die();
+    }
+
+    $messages['confirmationEmailSent'] = true;
+    return true;
+  }
+
+
+  private function profile_validate( $avatarLocalFile, &$_messages )
+  {
+    $messages = array();
+
+    $update = array('website' => $this->profile_validate_website());
+
+    $update_restricted =
+      $this->profile_validate_restricted(@$_POST['pass'], $messages);
+    if (!empty($messages))
+      goto fail;
+
+    $update['avatar'] =
+      $this->profile_validate_avatar($avatarLocalFile, $messages);
+    if (!empty($messages))
+      goto fail;
+
+    $update =
+      array_filter($update, function($value) {
+          return !is_null($value) && $value !== false;
+        });
+
+    assert(!in_array(false, $update_restricted, true));
+    return array($update, $update_restricted);
+
+  fail:
+    $_messages = array_merge($_messages, $messages);
+    return false;
+  }
+
+
+  private function profile_validate_website()
+  {
+    $website = trim(@$_POST['website']);
+    if ($website != $this->website) {
+      $this->website = $website;
+      $this->modified = true;
+    } else if (!$this->modified) {
+      $website = null;
+    }
+    return $website;
+  }
+
+
+  private function profile_validate_restricted( $password, &$messages )
+  {
+    $update = array(
+        'email' => $this->filter_email($messages),
+        'pass' => $this->filter_password($messages)
+      );
+
+    if (array_reduce($update, 'logical_or', false)) {
+      if (!$this->modified && $this->check_password($update['pass'])) {
+        $update['pass'] = null;
+      } else if (!$this->check_password($password)) {
+        $update['pass'] = false;
+        $messages['wrongLogin'] = true;
+      }
+    }
+
+    return $update;
+  }
+
+
+  private function profile_validate_avatar( $localFile, &$messages )
+  {
+    if (!empty($localFile)) {
+      $name = sha1_file($localFile);
+      if ($name !== false) {
+        $dirprefix = Config::$images['avatarsPath'] . substr($name, 0, 2);
+        $name = "$dirprefix/$name.jpg";
+
+        if (!is_file($name)) {
+          require_once('lib/images.php');
+          if ((!is_dir($dirprefix) && !mkdir($dirprefix, 0755, true)) ||
+            !Image::createThumb($localFile, $name, 40, 40))
+          {
+            $name = false;
+          }
+        }
+      }
+
+      if ($name === false)
+        $messages['avatarFailed'] = true;
+
+      return $name;
+    }
+    return null;
+  }
+
+
+  public function logout()
+  {
     session_unset();
     session_destroy();
     $_SESSION = array();
@@ -347,79 +545,130 @@ class User
   }
 
 
-  public function register( &$messages ) {
+  public function register( &$messages )
+  {
+    $password = null;
+    $r = $this->register_validate($password, $messages);
+    if ($r === false)
+      return false;
 
-    DB::query( 'DELETE FROM '.TABLE_USERS.' WHERE valid = 0 AND registered < NOW() - INTERVAL 30 MINUTE' );
+    $this->passwordHash = self::password_hash($password);
+    $this->makeValidationString();
 
-    if( !preg_match('/^\w{2,20}$/', $_POST['name']) ) {
-      $messages['nameInvalid'] = true;
-    } else {
-      $u = DB::getRow( 'SELECT * FROM '.TABLE_USERS.' WHERE name = :1', $_POST['name'] );
-      if( !empty($u) ) {
-        $messages['nameInUse'] = true;
+    $rv = DB::getRow(
+      'CALL pl_register_user(?, ?, ?, ?, ?)',
+      array($this->name, $this->email,
+        $this->passwordHash, $this->validationString,
+        time() - 2 * 3600));
+    assert($rv !== false);
+
+    if (!$rv['success']) {
+      unset($rv['success']);
+      foreach ($rv as $what => $value) {
+        if ($value)
+          $messages[$what] = true;
       }
-    }
-
-    if( strlen($_POST['pass']) < 6 ) {
-      $messages['passToShort'] = true;
-    }
-    else if( $_POST['pass'] != $_POST['pass2'] ) {
-      $messages['passNotEqual'] = true;
-    }
-
-    if( !preg_match( '/^[\.\w\-\+]{1,}@[\.\w\-]{2,}\.[\w]{2,}$/', $_POST['email'] ) ) {
-      $messages['wrongEmail'] = true;
-    } else {
-      $u = DB::getRow( 'SELECT * FROM '.TABLE_USERS.' WHERE email = :1', $_POST['email'] );
-      if( !empty($u) ) {
-        $messages['emailInUse'] = true;
-      }
-    }
-
-
-    if( !empty($messages) ) {
       return false;
     }
 
+    $this->register_forum($password);
+    $this->send_validation_request(
+      file_get_contents(Config::$templates.'registrationmail.txt'));
 
-    $this->validationString = md5(uniqid(rand()));
+    return true;
+  }
 
-    DB::insertRow( TABLE_USERS, array(
-      'registered' => date('Y-m-d H:i:s'),
-      'name' => $_POST['name'],
-      'pass' => md5($_POST['pass']),
-      'valid' => 0,
-      'score' => 0,
-      'images' => 0,
-      'website' => '',
-      'avatar' => Config::$images['avatarsPath'].'default.png',
-      'remember' => $this->validationString,
-      'admin' => 0,
-      'email' => $_POST['email']
-    ));
 
+  private function register_validate( &$password, &$messages )
+  {
+    return ($this->name = $this->filter_name($messages)) &&
+      ($this->email = $this->filter_email($messages)) &&
+      ($password = $this->filter_password($messages));
+  }
+
+
+  private function register_forum( $password )
+  {
     if( Config::$vbbIntegration['enabled'] ) {
       global $vbulletin;
       $forum = new ForumOps($vbulletin);
-      $user['name'] = $_POST['name'];
-      $user['pass'] = $_POST['pass'];
-      $user['email'] = $_POST['email'];
-      echo $forum->register_newuser($user, false);
+      $rv = $forum->register_newuser(
+        array(
+          'name' => $this->name,
+          'email' => $this->email,
+          'pass' => $password),
+        false);
+      echo $rv;
+    }
+  }
+
+
+  const EMAIL_ADDITIONAL_HEADERS =
+    "Content-Type: text/plain; charset=\"utf-8\"\r\nContent-Transfer-Encoding: quoted-printable";
+
+  private function send_validation_request( $template,
+    $substitutions = array() )
+  {
+    assert(!empty($template));
+
+    $mail = array();
+    preg_match(
+      '/From: (?<from>.*?)(?<newline>\r?\n)Subject: (?<subject>.*?)\r?\n\r?\n(?<text>.*)/sim',
+      $template, $mail);
+
+    $substitutions = array_merge(
+      array(
+        '%siteName%' => Config::$siteName,
+        '%userName%' => $this->name,
+        '%frontendPath%' => Config::$frontendPath,
+        '%validationURI%' => 'validate/' .
+            Base64::encode($this->validationString, Base64::URI | Base64::FIXED)),
+      $substitutions);
+
+    if ($mail['newline'] !== CRLF)
+      $substitutions[ $mail['newline'] ] = CRLF;
+
+    $search = array_keys($substitutions);
+    $replace = array_values($substitutions);
+    $mail = array(
+      mb_encode_mimeheader_utf8_q("{$this->name} <{$this->email}>"),
+      str_replace($search, array_map('mb_encode_mimeheader_utf8_q', $replace),
+        $mail['subject']),
+      quoted_printable_encode(str_replace($search, $replace, $mail['text'])),
+      'From: ' . $mail['from'] . CRLF . self::EMAIL_ADDITIONAL_HEADERS);
+
+    if (!Config::is_debug()) {
+      $send_func = 'mail';
+    } else {
+      $mail = array_map('htmlspecialchars', $mail);
+      $mail[] = CRLF;
+      array_unshift($mail,
+        '<pre>To: %1$s%5$s%4$s%5$sSubject: %2$s%5$s%5$s%3$s</pre>');
+      $send_func = 'printf';
     }
 
-    $mail = file_get_contents( Config::$templates.'registrationmail.txt' );
-    preg_match( '/From: (?<from>.*?)\r?\nSubject: (?<subject>.*?)\r?\n\r?\n(?<text>.*)/sim', $mail, $mail );
-    $mail['text'] = str_replace( '%validationString%', $this->validationString, $mail['text'] );
-    $mail['text'] = str_replace( '%siteName%', Config::$siteName, $mail['text'] );
-    $mail['text'] = str_replace( '%frontendPath%', Config::$frontendPath, $mail['text'] );
-    $mail['text'] = str_replace( '%userName%', $_POST['name'], $mail['text'] );
-
-    $mail['subject'] = str_replace( '%siteName%', Config::$siteName, $mail['subject'] );
-    $mail['subject'] = str_replace( '%userName%', $_POST['name'], $mail['subject'] );
-
-    mail( $_POST['email'], $mail['subject'], $mail['text'], 'From: '.$mail['from']."\n".'Content-Type: text/plain; charset="utf-8"' );
-    return true;
+    return call_user_func_array($send_func, $mail);
   }
+
+}
+
+
+function mb_encode_mimeheader_utf8_q( $str )
+{
+  return mb_encode_mimeheader($str, 'UTF-8', 'Q');
+}
+
+
+// PHP 5.3 doesn't have this
+function boolval( $value )
+{
+  return (bool) $value;
+}
+
+
+function logical_or( $a, $b )
+{
+  return $a || $b;
 }
 
 ?>

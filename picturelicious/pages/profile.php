@@ -8,15 +8,11 @@ if ($user) {
   $messages = array();
   if (!empty($_POST)) {
     $user->profile($_FILES['avatar']['tmp_name'], $messages);
-
-    if (empty($messages)) {
-      http_redirect(Config::$absolutePath);
-    }
   }
 
-  $user->loadEmail();
   include(Config::$templates . 'profile.tpl.php');
-} else {
+}
+else {
   http_redirect(Config::$absolutePath . 'login');
 }
 
