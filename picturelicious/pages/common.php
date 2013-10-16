@@ -1,21 +1,7 @@
 <?php
-/*
-  Picturelicious
-  (c) 2008 Dominic Szablewski
-*/
 
 header("Content-type: text/html; charset=UTF-8");
 require_once( 'lib/config.php' );
-require_once('lib/http.php');
-
-// HTTP 404
-function notfound()
-{
-  http_status(404, 'Not Found');
-  include(Config::$templates . '404.tpl.php');
-  global $cache;
-  $cache->disable();
-}
 
 // No JS - redirect to GET search url
 if( isset($_POST['q']) ) {
@@ -63,30 +49,5 @@ if (!$user) {
 $messages = array();
 $query = !empty($_GET['s']) ? $_GET['s'] : '';
 $r = explode( '/', $query );
-
-
-switch ($r[0])
-  {
-  case 'login':
-  case 'validate':
-  case 'static':
-  case 'logout':
-  case 'register';
-  case 'random':
-  case 'upload':
-  case 'profile':
-  case 'users':
-  case 'quicktags':
-  case 'comments':
-    include("pages/{$r[0]}.php");
-    break;
-
-  default:
-    include('pages/browse.php');
-      break;
-}
-
-$cache->write();
-
 
 ?>
