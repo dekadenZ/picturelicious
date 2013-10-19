@@ -6,30 +6,41 @@
 
 require_once( 'lib/config.php' );
 
-class Image {
+class Image
+{
+  private static $sharpenMatrix = array(
+    array(-1, -1, -1),
+    array(-1, 16, -1),
+    array(-1, -1, -1));
 
-  public static function createThumb( $imgPath, $thumbPath, $thumbWidth, $thumbHeight ) {
+
+  public static function createThumb( $imgPath, $thumbPath, $thumbWidth,
+    $thumbHeight )
+  {
     list( $srcWidth, $srcHeight, $type ) = getimagesize( $imgPath );
     $srcX = 0;
     $srcY = 0;
-    if( 
-      $srcWidth < 200 || $srcWidth > 4096
-      || $srcHeight < 200 || $srcHeight > 4096
+    if(
+      $srcWidth < $thumbWidth || $srcWidth > 4096
+      || $srcHeight < $thumbHeight || $srcHeight > 4096
     ) {
       return false;
     }
 
-    if( $type == IMAGETYPE_JPEG ) {
-      $imgcreate = 'ImageCreateFromJPEG';
-    } else if( $type == IMAGETYPE_GIF ) {
-      $imgcreate = 'ImageCreateFromGIF';
-    } else if( $type == IMAGETYPE_PNG ) {
-      $imgcreate = 'ImageCreateFromPNG';
-    } else {
-      return false;
-    }
 
-    $thumbDirName = dirname( $thumbPath );
+    switch ($type) {
+      case IMAGETYPE_JPEG:
+        $imgcreate = 'ImageCreateFromJPEG';
+        break;
+      case IMAGETYPE_GIF:
+        $imgcreate = 'ImageCreateFromGIF';
+        break;
+      case IMAGETYPE_PNG:
+        $imgcreate = 'ImageCreateFromPNG';
+        break;
+      default:
+        return false;
+    }
 
     if( ( $srcWidth/$srcHeight ) > ( $thumbWidth/$thumbHeight ) ) {
       $zoom = ($srcWidth/$srcHeight) / ($thumbWidth/$thumbHeight);
@@ -47,8 +58,7 @@ class Image {
     Imagecopyresampled($thumb, $orig, 0, 0, $srcX, $srcY, $thumbWidth, $thumbHeight, $srcWidth, $srcHeight);
 
     if( Config::$images['sharpen'] && function_exists('imageconvolution') ) {
-      $sharpenMatrix = array( array(-1,-1,-1), array(-1,16,-1), array(-1,-1,-1) );
-      imageconvolution($thumb, $sharpenMatrix, 8, 0);
+      imageconvolution($thumb, self::$sharpenMatrix, 8, 0);
     }
     imagejpeg( $thumb, $thumbPath, Config::$images['jpegQuality'] );
 
@@ -84,9 +94,9 @@ class Image {
         $r = ($rgb >> 16) & 0xFF;
         $g = ($rgb >> 8) & 0xFF;
         $b = $rgb & 0xFF;
-        $colors[] = array( 
-          'r' => $r, 
-          'g' => $g, 
+        $colors[] = array(
+          'r' => $r,
+          'g' => $g,
           'b' => $b
         );
       }
