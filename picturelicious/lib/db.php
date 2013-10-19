@@ -184,17 +184,32 @@ class DB
     return $r->rowCount();
   }
 
-  public static function insertRow( $table, $insertFields )
+
+  const INSERT_PARAM_PREFIX = ':__param';
+
+  public static function insertRow( $table, $insertFields,
+    $update_on_duplicate = false )
   {
     assert(is_array($insertFields) && !empty($insertFields));
 
     $q = 'INSERT INTO ' . self::escape_identifier($table);
-    if (!isset($insertFields[0])) {
-      $q .= ' (' . join(', ', array_map(__CLASS__.'::escape_identifier', array_keys($insertFields))) . ')';
-    }
-    $q .= ' VALUES (' . join(', ', array_fill(0, count($insertFields), '?')) . ')';
 
-    return self::query_nofetch($q, array_values($insertFields));
+    if (!isset($insertFields[0])) {
+      $column_names =
+        array_map(__CLASS__.'::escape_identifier', array_keys($insertFields));
+      $q .=  ' (' . join(', ', $column_names) . ')';
+      $insertFields = array_values($insertFields);
+    }
+
+    $q .= ' VALUES (' . str_repeat('?, ', count($insertFields) - 1) . '?)';
+
+    if ($update_on_duplicate) {
+      assert(isset($column_names));
+      $q .= ' ON DUPLICATE KEY UPDATE ' . join('=?, ', $column_names) . '=?';
+      $insertFields = array_merge($insertFields, $insertFields);
+    }
+
+    return self::query_nofetch($q, $insertFields);
   }
 
 
