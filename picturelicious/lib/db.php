@@ -18,13 +18,16 @@ require_once( 'lib/config.php' );
  *
  * query() and getRow() return a 2-dimensional array instead of a result resource.
  */
-class DB {
+class DB
+{
   public static $link = null;
   public static $result = null;
   public static $sql;
   public static $numQueries = 0;
 
-  private static function connect() {
+
+  private static function connect()
+  {
     if (!is_null(self::$link))
       return self::$link;
 
@@ -43,7 +46,9 @@ class DB {
     }
   }
 
-  public static function foundRows() {
+
+  public static function foundRows()
+  {
     $r = self::query_nofetch('SELECT FOUND_ROWS()');
     try {
       $rv = $r->fetchColumn();
@@ -59,20 +64,27 @@ class DB {
     return $rv;
   }
 
-  public static function numRows() {
+
+  public static function numRows()
+  {
     /* This works only for some versions of MySQL (and MariaDB). Visit
      * http://www.php.net/manual/en/pdostatement.rowcount.php for details.
      */
     return self::$result->rowCount();
   }
 
-  public static function affectedRows() {
+
+  public static function affectedRows()
+  {
     return self::$result->rowCount();
   }
 
-  public static function insertId() {
+
+  public static function insertId()
+  {
     return self::$link->lastInsertId();
   }
+
 
   public static function query_nofetch( $q, $params = array(),
     $fetch_mode = null )
@@ -118,6 +130,7 @@ class DB {
     }
   }
 
+
   public static function query( $q, $params = array(),
     $fetch_mode = array(PDO::FETCH_ASSOC) )
   {
@@ -136,6 +149,7 @@ class DB {
     return $rv;
   }
 
+
   public static function getRow( $q, $params = array(),
     $fetch_mode = array(PDO::FETCH_ASSOC) )
   {
@@ -153,6 +167,7 @@ class DB {
 
     return $rv;
   }
+
 
   public static function updateRow( $table, $idFields, $updateFields )
   {
@@ -182,10 +197,12 @@ class DB {
     return self::query_nofetch($q, array_values($insertFields));
   }
 
+
   public static function escape_identifier( $name )
   {
     return '`' . str_replace('`', '``', $name) . '`';
   }
+
 }
 
 ?>
