@@ -96,6 +96,8 @@ class DB
       assert(is_null($fetch_mode) || is_array($fetch_mode));
     }
 
+    // var_dump($q, $params, $fetch_mode);
+
     self::connect();
 
     try {
@@ -131,8 +133,7 @@ class DB
   }
 
 
-  public static function query( $q, $params = array(),
-    $fetch_mode = array(PDO::FETCH_ASSOC) )
+  public static function query()
   {
     $r = call_user_func_array(__CLASS__.'::query_nofetch', func_get_args());
     try {
@@ -150,8 +151,7 @@ class DB
   }
 
 
-  public static function getRow( $q, $params = array(),
-    $fetch_mode = array(PDO::FETCH_ASSOC) )
+  public static function getRow()
   {
     $r = call_user_func_array(__CLASS__.'::query_nofetch', func_get_args());
     try {
