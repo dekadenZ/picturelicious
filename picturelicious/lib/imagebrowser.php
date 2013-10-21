@@ -84,11 +84,11 @@ class ImageBrowser extends ImageCatalog {
           'count' => $this->thumbsPerPage,
         );
 
-      if (empty($this->user)) {
+      if (is_null($this->user)) {
         $where_clause = 'TRUE';
       } else {
         $where_clause = 'i.`user` = :user';
-        $params['user'] = $this->user['id'];
+        $params['user'] = $this->user->id;
       }
 
       $this->thumbs = DB::query(
@@ -112,16 +112,18 @@ class ImageBrowser extends ImageCatalog {
     }
 
     $this->totalResults = DB::foundRows();
+    if (!is_null($this->user))
+      $this->user->imageCount = $this->totalResults;
 
 
-    // compute previoues, current and next page
+    // compute previous, current and next page
     if( $this->totalResults > 0 ) {
       $this->pages['current'] = $this->page+1;
       $this->pages['total'] = ceil($this->totalResults / $this->thumbsPerPage);
       if( $this->page > 0 ) {
         $this->pages['prev'] = $this->page;
       }
-      if( $this->totalResults > $this->thumbsPerPage * $this->page + $this->thumbsPerPage ) {
+      if ($this->pages['current'] < $this->pages['total']) {
         $this->pages['next'] = $this->page + 2;
       }
     }

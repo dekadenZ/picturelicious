@@ -47,7 +47,7 @@
   </div>
 
   <div class="userMenu">
-    <?php if ($user) { ?>
+    <?php if (@$user) { ?>
       Hello
       <a href="<?php echo Config::$absolutePath; ?>user/<?php echo $user->name; ?>"><?php echo $user->name; ?></a>
       (<a href="<?php echo Config::$absolutePath; ?>profile">profile</a> /
