@@ -11,9 +11,9 @@ require_once('lib/http.php');
 // HTTP 404
 function notfound()
 {
+  global $cache, $user;
   http_status(404, 'Not Found');
   include(Config::$templates . '404.tpl.php');
-  global $cache;
   $cache->disable();
 }
 
@@ -66,7 +66,7 @@ $r = explode( '/', $query );
 
 
 switch ($r[0])
-  {
+{
   case 'login':
   case 'validate':
   case 'static':
@@ -83,7 +83,7 @@ switch ($r[0])
 
   default:
     include('pages/browse.php');
-      break;
+    break;
 }
 
 $cache->write();
