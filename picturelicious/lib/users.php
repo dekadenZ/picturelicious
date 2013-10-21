@@ -20,6 +20,11 @@ class User
   public $admin;
   public $website;
   public $email;
+  public $avatar;
+
+  // aggregated user info
+  public $score;
+  public $imageCount;
 
   private $validationString;
   private $passwordHash;
@@ -28,8 +33,20 @@ class User
   private $modified;
 
 
-  public function __construct() {
-    $this->reset();
+  public function __construct( $uniqueIdentifier = null, $fetchScore = false )
+  {
+    if (!is_null($uniqueIdentifier)) {
+      if (is_integer($uniqueIdentifier)) {
+        $what = 'id';
+      } else if (is_string($uniqueIdentifier)) {
+        $what = 'name';
+      } else {
+        throw new Exception('Unsupported type ' . gettype($uniqueIdentifier) . ' for $uniqueIdentifier');
+      }
+
+      assert(isset($what));
+      $this->fetchBy(array($what => $uniqueIdentifier), $fetchScore);
+    }
   }
 
 
@@ -145,18 +162,10 @@ class User
     $name = $_POST['name'];
     $password = $_POST['pass'];
 
-    $r = DB::query_nofetch(
-      'SELECT `name`, `id`, `admin`, `website`, `email`, `pass` AS `passwordHash`
-       FROM ' . DB::escape_identifier(TABLE_USERS) .
-      'WHERE `name` = ? AND `valid`',
-      array($name),
-      array(PDO::FETCH_INTO, new User));
-    $u = $r->fetch();
-    $r->closeCursor();
-    unset($r);
-
-
-    if ($u !== false && $u->check_password($password)) {
+    $u = new User;
+    if ($u->fetchBy(array('name' => $name, 'valid' => true)) &&
+      $u->check_password($password)
+    ) {
       if (filter_input(INPUT_POST, 'remember', FILTER_VALIDATE_BOOLEAN))
         $u->update_remember();
 
@@ -206,17 +215,8 @@ class User
     }
 
     // remember cookie found
-    $r = DB::query_nofetch(
-      'SELECT `id`, `name`, `admin`, `website`, `email`
-       FROM ' . DB::escape_identifier(TABLE_USERS) .
-      'WHERE `remember` = ?',
-      array($validationString),
-      array(PDO::FETCH_INTO, new User));
-    $u = $r->fetch();
-    $r->closeCursor();
-    unset($r);
-
-    if ($u !== false) {
+    $u = new User;
+    if ($u->fetchBy(array('remember' => $validationString))) {
       // refresh for another year
       $u->validationString = $validationString;
       $u->update_remember_cookie($_COOKIE[Config::$rememberCookie]);
@@ -648,6 +648,36 @@ class User
     }
 
     return call_user_func_array($send_func, $mail);
+  }
+
+
+  private function fetchBy( $what, $fetchScore = false )
+  {
+    if (!is_array($what))
+      $what = array($what => $this->{$what});
+
+    $columns = 'u.`id`, u.`name`, u.`admin`, u.`website`, u.`email`, u.`avatar`';
+    $tables = DB::escape_identifier(TABLE_USERS) . ' AS u';
+
+    if ($fetchScore) {
+      $columns .= ', IFNULL(l.`score`, 0) + IFNULL(i.`score`, 0) + IFNULL(iv.`score`, 0) + IFNULL(ir.`score`, 0) + IFNULL(c.`score`, 0) + IFNULL(t.`score`, 0) AS `score`';
+      $tables .=
+      ' LEFT OUTER JOIN `pl_users_legacy` AS l ON u.`id` = l.`user`
+        LEFT OUTER JOIN `plv_score_user_images` AS i ON u.`id` = i.`user`
+        LEFT OUTER JOIN `plv_score_user_imagevotes` AS iv ON u.`id` = iv.`user`
+        LEFT OUTER JOIN `plv_score_user_imageratings` AS ir ON u.`id` = ir.`user`
+        LEFT OUTER JOIN `plv_score_user_comments` AS c ON u.`id` = c.`user`
+        LEFT OUTER JOIN `plv_score_user_tags` AS t ON u.`id` = t.`user`';
+    }
+
+    $r = DB::getRow(
+      "SELECT $columns FROM $tables WHERE u." .
+        join('=? AND u.', array_map('DB::escape_identifier', array_keys($what))) .
+        '=?',
+      array_values($what),
+      array(PDO::FETCH_INTO, $this));
+
+    return $r !== false;
   }
 
 }
