@@ -164,7 +164,7 @@ class User
 
     $u = new User;
     if ($u->fetchBy(array('name' => $name, 'valid' => true)) &&
-      $u->check_password($password)
+      $u->check_password($password, true)
     ) {
       if (filter_input(INPUT_POST, 'remember', FILTER_VALIDATE_BOOLEAN))
         $u->update_remember();
