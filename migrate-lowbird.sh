@@ -2,21 +2,21 @@
 set -e -o pipefail
 
 if [ ! -d 2013/01 ]; then
-	echo 'Are you shure »data/images« is the current working directory? If yes, please create a directory »2013/01« to overide this sanity check.' >&2
+	echo 'Are you sure »data/images« is the current working directory? If yes, please create a directory »2013/01« to overide this sanity check.' >&2
 	exit 2
 fi
 
 mysql -B picturelicious < "${0%.sh}.sql"
 
 # image checksums
-checksumfile='sha1sums.txt'
+checksumfile='/tmp/picturelicious-sha1sums.txt'
 ( if [ -s "$checksumfile.xz" ]; then
 	exec xz -dc "$checksumfile.xz"
 else
 	find -type f -exec sha1sum -b -- \{\} + |
 	tee >(exec xz -zc -9e > "$checksumfile.xz")
 fi; ) |
-sed -re 's|^(\S+)\s\*\./(.+)\.[^\./]*$|UPDATE `pl_images` SET `hash`=UNHEX(\x27\1\x27) WHERE `keyword`=\x27\2\x27 AND `hash` IS NULL;|' |
+sed -re 's|^(\S+)\s\*\./(.+)\.[^\./]*$|UPDATE `pl_images` SET `hash`=UNHEX(\x27\1\x27) WHERE `keyword`=\x27\2\x27;|' |
 tee >(exec mysql -B picturelicious)
 echo "If everything went well, you can delete »$checksumfile.xz«." >&2
 
