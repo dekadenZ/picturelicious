@@ -687,6 +687,14 @@ class User
     return $r !== false;
   }
 
+
+  public function getAvatar()
+  {
+    return empty($this->avatar) ?
+      Config::$images['avatarsPath'] . 'default.png' :
+      $this->avatar;
+  }
+
 }
 
 
