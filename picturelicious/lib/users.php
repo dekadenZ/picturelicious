@@ -660,7 +660,9 @@ class User
     $tables = DB::escape_identifier(TABLE_USERS) . ' AS u';
 
     if ($fetchScore) {
-      $columns .= ', IFNULL(l.`score`, 0) + IFNULL(i.`score`, 0) + IFNULL(iv.`score`, 0) + IFNULL(ir.`score`, 0) + IFNULL(c.`score`, 0) + IFNULL(t.`score`, 0) AS `score`';
+      $columns .= ',
+        i.`count` AS `imageCount`,
+        IFNULL(l.`score`, 0) + IFNULL(i.`score`, 0) + IFNULL(iv.`score`, 0) + IFNULL(ir.`score`, 0) + IFNULL(c.`score`, 0) + IFNULL(t.`score`, 0) AS `score`';
       $tables .=
       ' LEFT OUTER JOIN `pl_users_legacy` AS l ON u.`id` = l.`user`
         LEFT OUTER JOIN `plv_score_user_images` AS i ON u.`id` = i.`user`
@@ -676,6 +678,11 @@ class User
         '=?',
       array_values($what),
       array(PDO::FETCH_INTO, $this));
+
+    if (is_string($this->score))
+      $this->score = floatval($this->score);
+    if (is_string($this->imageCount))
+      $this->imageCount = intval($this->imageCount);
 
     return $r !== false;
   }
