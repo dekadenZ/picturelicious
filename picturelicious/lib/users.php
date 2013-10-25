@@ -64,7 +64,7 @@ class User
   }
 
 
-  const PROPERTIES = 'name|id|admin|website|email';
+  const PROPERTIES = 'name|id|admin|website|email|avatar';
 
   public function __from_array( $a )
   {
