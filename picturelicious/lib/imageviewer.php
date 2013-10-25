@@ -1,18 +1,19 @@
 <?php
-
-/*
-  ImageViewer loads a single image and its comments specified by a keyword
-*/
-
 require_once( 'lib/imagecatalog.php' );
+require_once('lib/image.php');
 
-class ImageViewer extends ImageCatalog {
+/**
+ * ImageViewer loads a single image and its comments specified by a keyword
+ */
+class ImageViewer extends ImageCatalog
+{
   protected $position = 0;
-  protected $keyword = '';
+  protected $keyword = null;
 
-  public $image = array();
+  public $image = null;
   public $stream = array();
-  public $userInfo = array();
+  public $comments = null;
+
 
   public function setCurrent( $keyword ) {
     $this->keyword = $keyword;
@@ -32,72 +33,44 @@ class ImageViewer extends ImageCatalog {
     }
   }
 
-  public function load() {
-    $conditions = '';
-    if( !empty($this->user) ) {
-      $conditions .= ' AND i.user = :2';
-      $this->userInfo = $this->user;
+
+  public function load()
+  {
+    $r = DB::query_nofetch(
+      'CALL pl_find_image_prev_next(?, ?)',
+      array($this->keyword, $this->user ? $this->user->id : null),
+      array(PDO::FETCH_CLASS, 'Image'));
+
+    $img = $r->fetch();
+    if ($img === false)
+      return false;
+
+    if ($img->keyword !== $this->keyword) {
+      $this->stream['prev'] = $img->keyword;
+      $img = $r->fetch();
     }
 
+    if ($this->user)
+      $img->uploader = $this->user;
+    $this->image = $img;
+    $img = $r->fetch();
 
-    $this->image = DB::getRow(
-      'SELECT
-        i.id, i.logged, UNIX_TIMESTAMP(i.logged) AS loggedTS,
-        i.keyword, i.image, i.score, i.votes,
-        tags, u.name AS userName, i.user
-      FROM '.TABLE_IMAGES.' i
-      LEFT JOIN '.TABLE_USERS.' u
-        ON u.id = i.user
-      WHERE i.keyword = :1 '.$conditions,
-      $this->keyword,
-      $this->user['id']
-    );
-    $this->image['path'] = date('Y/m/', $this->image['loggedTS']).$this->image['image'];
-
-    if( empty( $this->user) ) {
-      $this->userInfo = DB::getRow(
-        'SELECT id, name, score, images, avatar, website
-          FROM '.TABLE_USERS.' 
-          WHERE 
-            id = :1', 
-        $this->image['user']
-      );
+    if ($img !== false) {
+      $this->stream['next'] = $img->keyword;
     }
 
-    // compute previoues and next page
-    $next = DB::getRow(
-      'SELECT i.keyword
-      FROM '.TABLE_IMAGES.' i
-      WHERE i.id < :1 '.$conditions.'
-      ORDER BY id DESC
-      LIMIT 1',
-      $this->image['id'],
-      $this->user['id']
-    );
+    $r->nextRowset();
+    $r->closeCursor();
+    unset($r);
 
-    $prev = DB::getRow(
-      'SELECT i.keyword
-      FROM '.TABLE_IMAGES.' i
-      WHERE i.id > :1 '.$conditions.'
-      ORDER BY id ASC
-      LIMIT 1',
-      $this->image['id'],
-      $this->user['id']
-    );
-
-
-
-    if( !empty($next) ) {
-      $this->stream['next'] = $next['keyword'];
-    }
-    if( !empty($prev) ) {
-      $this->stream['prev'] = $prev['keyword'];
-    }
+    return true;
   }
 
-  public function loadComments() {
+
+  public function loadComments()
+  {
     $this->comments = DB::query(
-      'SELECT 
+      'SELECT
         c.id, c.content, u.name, u.avatar,
         UNIX_TIMESTAMP(c.created) AS created
       FROM '.TABLE_COMMENTS.' c
@@ -105,16 +78,14 @@ class ImageViewer extends ImageCatalog {
         ON u.id = c.userId
       WHERE c.imageId = :1
       ORDER BY created',
-      $this->image['id']
+      $this->image->id
     );
-    $this->commentCount = count( $this->comments );
 
-    foreach( array_keys($this->comments) as $i ) {
-      $this->comments[$i]['content'] = preg_replace( 
+    foreach ($this->comments as &$comment) {
+      $comment['content'] = nl2br(preg_replace(
         '#(?<!\w)(((http|https|ftp)://)|(www\.))([^\s<>]+)#i',
-        "<a href=\"$3://$4$5\">$4$5</a>", 
-        nl2br( htmlspecialchars($this->comments[$i]['content']) )
-      );
+        "<a href=\"$3://$4$5\">$4$5</a>",
+        htmlspecialchars($comments['content'])));
     }
   }
 }

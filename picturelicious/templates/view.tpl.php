@@ -1,35 +1,36 @@
 <?php include( Config::$templates.'header.tpl.php' );
 require_once( 'lib/time.php' );
 
-$time = ($iv->image['loggedTS']); // setting timestamp
+
+$img = $iv->image;
+$uploader = $img->getUploader();
+
 ?>
-
-
 <h1>
   &raquo; Viewing
   <?php if( !empty($iv->user) ) { ?>
-    user: <a href="<?php echo Config::$absolutePath.'user/'.$iv->user['name']; ?>"><?php echo $iv->user['name']; ?></a>
+    user: <a href="<?php echo Config::$absolutePath, 'user/', $iv->user->name; ?>"><?php echo $iv->user->name; ?></a>
   <?php } else if( !empty($iv->channel) ) { ?>
-    channel: <a href="<?php echo Config::$absolutePath.'channel/'.$iv->channel['keyword']; ?>"><?php echo $iv->channel['name']; ?></a>
+    channel: <a href="<?php echo Config::$absolutePath, 'channel/', $iv->channel['keyword']; ?>"><?php echo $iv->channel['name']; ?></a>
   <?php } else { ?>
-    "<?php echo htmlspecialchars($iv->image['path']) ?>" // posted
-    <?php echo time_diff_human($time);
+    "<?php echo htmlspecialchars($img->path) ?>" // posted
+    <?php echo time_diff_human($img->uploadtime);
   } ?>
 </h1>
 
 <div class="userInfo">
-  <img class="avatar" width="40" height="40" src="<?php echo Config::$absolutePath.$iv->userInfo['avatar']; ?>"/>
+  <img class="avatar" width="40" height="40" src="<?php echo Config::$absolutePath, $uploader->getAvatar(); ?>"/>
   <div class="name">
     <strong>
-      <a href="<?php echo Config::$absolutePath.'user/'.$iv->userInfo['name']; ?>"><?php echo $iv->userInfo['name']; ?></a>
+      <a href="<?php echo Config::$absolutePath, 'user/', $uploader->name; ?>"><?php echo $uploader->name; ?></a>
     </strong>
   </div>
   <div class="info">
-    Score: <strong><?php echo $iv->userInfo['score']; ?></strong> /
-    Images: <strong><?php echo $iv->userInfo['images']; ?></strong>
-    <?php if( !empty($iv->userInfo['website'])) { ?>/
-      Website: <strong><a href="<?php echo htmlspecialchars($iv->userInfo['website']); ?>" target="_blank">
-        <?php echo htmlspecialchars($iv->userInfo['website']); ?>
+    Score: <strong><?php echo $uploader->score; ?></strong> /
+    Images: <strong><?php echo $uploader->imageCount; ?></strong>
+    <?php if (!empty($uploader->website)) { ?>/
+      Website: <strong><a href="<?php echo htmlspecialchars($uploader->website); ?>" target="_blank">
+        <?php echo htmlspecialchars($uploader->website); ?>
       </a></strong>
     <?php } ?>
   </div>
@@ -38,19 +39,19 @@ $time = ($iv->image['loggedTS']); // setting timestamp
 
 <div id="viewer">
   <?php if( isset($iv->stream['prev']) ) { ?>
-    <a href="<?php echo Config::$absolutePath.$iv->basePath.'view/'.$iv->stream['prev']; ?>" class="prev" id="prevBar" title="Previous">Previous</a>
+    <a href="<?php echo Config::$absolutePath, $iv->basePath, 'view/', $iv->stream['prev']; ?>" class="prev" id="prevBar" title="Previous">Previous</a>
   <?php } else { ?>
     <div class="noPrev" id="prevBar">Previous</div>
   <?php } ?>
 
   <?php if( isset($iv->stream['next']) ) { ?>
-    <a href="<?php echo Config::$absolutePath.$iv->basePath.'view/'.$iv->stream['next']; ?>" class="next" id="nextBar" title="Next">Next</a>
+    <a href="<?php echo Config::$absolutePath, $iv->basePath, 'view/', $iv->stream['next']; ?>" class="next" id="nextBar" title="Next">Next</a>
   <?php } else { ?>
     <div class="noNext" id="nextBar">Next</div>
   <?php } ?>
 
   <div id="imageContainer">
-    <img id="image" onclick="swap(this, 'scaled', 'full')" class="scaled" src="<?php echo Config::$absolutePath.Config::$images['imagePath'].$iv->image['path']; ?>" alt="<?php echo htmlspecialchars($iv->image['tags']) ?>"/>
+    <img id="image" onclick="swap(this, 'scaled', 'full')" class="scaled" src="<?php echo Config::$absolutePath, Config::$images['imagePath'], $img->path; ?>" alt="<?php echo htmlspecialchars($img->tags) ?>"/>
   </div>
 
   <div class="randomThumbs">
@@ -59,21 +60,19 @@ $time = ($iv->image['loggedTS']); // setting timestamp
 
   <div id="imageInfo">
     <div class="rating">
-      <input type="hidden" value="<?php echo $iv->image['id'];?>" id="imageId"/>
+      <input type="hidden" value="<?php echo $img->id; ?>" id="imageId"/>
       <div class="ratingBase">
-        <div class="ratingCurrent" id="currentRating" style="width: <?php echo $iv->image['votes'] > 0 ? ($iv->image['score']) / 0.05 : 0;?>px"></div>
+        <div class="ratingCurrent" id="currentRating" style="width: <?php echo $img->votecount > 0 ? $img->rating * 20 : 0;?>px"></div>
         <div class="ratingRate" id="userRating">
-          <a href="#" onclick="return rate(<?php echo $iv->image['id'];?>,1);" onmouseout="sr('userRating',0);" onmouseover="sr('userRating',1);"></a>
-          <a href="#" onclick="return rate(<?php echo $iv->image['id'];?>,2);" onmouseout="sr('userRating',0);" onmouseover="sr('userRating',2);"></a>
-          <a href="#" onclick="return rate(<?php echo $iv->image['id'];?>,3);" onmouseout="sr('userRating',0);" onmouseover="sr('userRating',3);"></a>
-          <a href="#" onclick="return rate(<?php echo $iv->image['id'];?>,4);" onmouseout="sr('userRating',0);" onmouseover="sr('userRating',4);"></a>
-          <a href="#" onclick="return rate(<?php echo $iv->image['id'];?>,5);" onmouseout="sr('userRating',0);" onmouseover="sr('userRating',5);"></a>
+        <?php for ($i = 1; $i <= 5; $i++) { ?>
+          <a href="#" onclick="return rate(<?php echo $img->id, ',', $i;?>);" onmouseout="sr('userRating',0);" onmouseover="sr('userRating',<?php echo $i;?>);"></a>
+        <?php } ?>
         </div>
       </div>
       <div id="loadRating" class="load"></div>
       <span id="ratingDescription">
-        <?php if($iv->image['votes'] > 0 ) { ?>
-          <?php echo number_format($iv->image['score'],1);?> after <?php echo $iv->image['votes'];?> Vote<?php echo $iv->image['votes'] > 1 ? 's' : '' ?>
+        <?php if ($img->votecount > 0) { ?>
+          <?php echo number_format($img->rating, 1);?> after <?php echo $img->votecount;?> Vote<?php echo $img->votecount > 1 ? 's' : '' ?>
         <?php } else { ?>
           No votes yet!
         <?php } ?>
@@ -82,41 +81,41 @@ $time = ($iv->image['loggedTS']); // setting timestamp
       <?php if($user->admin) { ?>
         <div style="float:right;" id="del">
           <div class="load" id="loadDelete"></div>
-          <a href="#" onclick="del(<?php echo $iv->image['id']; ?>)">[x]</a>
+          <a href="#" onclick="del(<?php echo $img->id; ?>)">[x]</a>
         </div>
       <?php } ?>
     </div>
 
     <div class="date">
-      <?php echo date('d. M Y H:i',$iv->image['loggedTS']); ?>
+      <?php echo date('d. M Y H:i', $img->uploadtime); ?>
     </div>
 
     <div>
-      Tags: <span id="tags"><?php echo !empty($iv->image['tags']) ? htmlspecialchars($iv->image['tags']) : '<em>none</em>'; ?></span>
+      Tags: <span id="tags"><?php echo !empty($img->tags) ? htmlspecialchars($img->tags) : '<em>none</em>'; ?></span>
       <?php if( $user->id ) { ?>
         <a href="#" onclick="swap($('addTag'), 'hidden', 'visible'); $('tagText').focus(); return false;">(add)</a>
-        <form class="hidden" id="addTag" action="" onsubmit="return addTags(<?php echo $iv->image['id']; ?>, $('tagText'), <?php echo $user->admin ? 'true' : 'false';?>);">
-          <input type="text" name="tags" id="tagText" <?php if($user->admin) {?>value="<?php echo htmlspecialchars($iv->image['tags']);?>"<?php } ?>/>
-          <input type="button" name="save" value="Add Tags" class="button" onclick="addTags(<?php echo $iv->image['id']; ?>, $('tagText'), <?php echo $user->admin ? 'true' : 'false';?>);"/>
+        <form class="hidden" id="addTag" action="" onsubmit="return addTags(<?php echo $img->id; ?>, $('tagText'), <?php echo $user->admin ? 'true' : 'false';?>);">
+          <input type="text" name="tags" id="tagText" <?php if($user->admin) {?>value="<?php echo htmlspecialchars($img->tags);?>"<?php } ?>/>
+          <input type="button" name="save" value="Add Tags" class="button" onclick="addTags(<?php echo $img->id; ?>, $('tagText'), <?php echo $user->admin ? 'true' : 'false';?>);"/>
           <div id="loadTags" class="load"></div>
         </form>
       <?php } ?>
     </div>
 
-    Post in forum: <input type="text" readonly="1" value="[URL=<?php echo Config::$frontendPath ?>][IMG]<?php echo Config::$frontendPath.Config::$images['imagePath'].$iv->image['path']; ?>[/IMG][/URL]" style="width: 400px; font-size:10px" onclick="this.focus();this.select();"/>
+    Post in forum: <input type="text" readonly="1" value="[URL=<?php echo Config::$frontendPath ?>][IMG]<?php echo Config::$frontendPath, Config::$images['imagePath'], $img->path; ?>[/IMG][/URL]" style="width: 400px; font-size:10px" onclick="this.focus();this.select();"/>
 
 
 
     <div class="comments">
-      <?php if( $iv->commentCount == 1 ) { ?>
+      <?php if (count($iv->comments) === 1) { ?>
         <h3>1 comment:</h3>
-      <?php } else if( $iv->commentCount > 1 ) { ?>
-        <h3><?php echo $iv->commentCount ?> comments:</h3>
+      <?php } else if (count($iv->comments) > 1) { ?>
+        <h3><?php echo count($iv->comments) ?> comments:</h3>
       <?php } else { ?>
         <h3>No comments yet!</h3>
       <?php } ?>
 
-      <?php foreach( $iv->comments as $c ) { ?>
+      <?php if (!empty($iv->comments)) foreach( $iv->comments as $c ) { ?>
         <div class="comment">
           <div class="commentHead">
             <img class="avatarSmall" width="16" height="16" src="<?php echo Config::$absolutePath.$c['avatar']; ?>"/>
@@ -134,7 +133,7 @@ $time = ($iv->image['loggedTS']); // setting timestamp
       <?php } ?>
 
       <?php if( $user->id ) { ?>
-        <form method="post" class="addComment" action="<?php echo Config::$absolutePath.$iv->basePath.'view/'.$iv->image['keyword']; ?>">
+        <form method="post" class="addComment" action="<?php echo Config::$absolutePath, $iv->basePath, 'view/', $img->keyword; ?>">
           <div>
             <textarea name="content" rows="3" cols="60"></textarea>
             <input class="submit" type="submit" name="addComment" value="Submit comment"/>
