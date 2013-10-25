@@ -133,11 +133,12 @@ class DB
   }
 
 
-  public static function query()
+  public static function query( $q, $params = null, $fetch_mode = array() )
   {
-    $r = call_user_func_array(__CLASS__.'::query_nofetch', func_get_args());
+    $r = self::query_nofetch($q, $params);
+
     try {
-      $rv = $r->fetchAll();
+      $rv = call_user_func_array(array($r, 'fetchAll'), $fetch_mode);
     } catch (Exception $ex) {
     }
 
