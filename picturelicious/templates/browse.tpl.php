@@ -57,11 +57,11 @@
     $imgBasePath = $ib->basePath;
   }
   foreach( $ib->thumbs as $thumb ) {
-    if( isset( $thumb['left'] ) ) {
-    echo '<div class="', $thumb['class'], '" style="left:', $thumb['left'], 'px;top:', $thumb['top'], 'px;"><a class="thumb" href="',
-      Config::$absolutePath.$imgBasePath, 'view/', $thumb['keyword'], '">',
-      '<img src="', $thumb['thumb'], '" alt="', $thumb['keyword'], '" title="', $thumb['userName'], ' - ',
-      date('d. M Y H:i', $thumb['logged']), '"/></a></div>', "\n";
+    if (isset($thumb->gridData['left']) ) {
+    echo '<div class="', $thumb->gridData['class'], '" style="left:', $thumb->gridData['left'], 'px; top:', $thumb->gridData['top'], 'px;"><a class="thumb" href="',
+      Config::$absolutePath.$imgBasePath, 'view/', $thumb->keyword, '">',
+      '<img src="', $thumb->thumbnail, '" alt="', $thumb->keyword, '" title="', $thumb->uploader->name, ' - ',
+      date('d. M Y H:i', $thumb->uploadtime), '"/></a></div>', "\n";
     }
   }
 ?>

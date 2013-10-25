@@ -2,8 +2,8 @@
 <html>
 <head>
   <title><?php
-    if (!empty($iv->image['tags'])) {
-      echo htmlspecialchars($iv->image['tags']), ' – ';
+    if (!empty($iv->image->tags)) {
+      echo htmlspecialchars($iv->image->tags), ' – ';
     }
     echo Config::$siteTitle
   ?></title>

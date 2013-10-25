@@ -34,7 +34,7 @@ class GridView {
 
     // Get thumb indices sorted by thumb importance ("score").
     $thumbs_importance =
-      array_keys(uasort_copy($thumbs, __CLASS__.'::compareScore'));
+      array_keys(uasort_copy($thumbs, __CLASS__.'::__compareImageRating'));
 
     // How many thumbs get which CSS-Class? The first n thumbnails
     // get the biggest box etc.
@@ -57,22 +57,20 @@ class GridView {
         list( $currentClass, $currentMax ) = each( $classCounts );
       }
 
-      $t = &$thumbs[$i];
-      $t['class'] = $currentClass;
-      $t['thumb'] = $pathPrefix . date('Y/m', $t['logged'])
+      $t = $thumbs[$i];
+      $t->gridData = array('class' => $currentClass);
+      $t->thumbnail = $pathPrefix . date('Y/m', $t->uploadtime)
         .'/'. $classes[$currentClass]['dir']
-        .'/'. $t['thumb'];
+        .'/'. $t->thumbnail;
     }
 
     // Now that every thumb has a CSS-Class, we can sort them into our grid
     $gridSize = Config::$gridView['gridSize'];
-    foreach ($thumbs as &$t) {
-      list( $x, $y ) = $this->insert(
-        $classes[$t['class']]['width'],
-        $classes[$t['class']]['height']
-      );
-      $t['left'] = $x * $gridSize;
-      $t['top'] = $y * $gridSize;
+    foreach ($thumbs as $t) {
+      $g = &$t->gridData;
+      list($g['left'], $g['top']) =
+        $this->insert($classes[$g['class']]['width'],
+          $classes[$g['class']]['height']);
     }
 
     // Calculate the final grid height
@@ -81,11 +79,13 @@ class GridView {
     return $thumbs;
   }
 
+
   // Callback for uasort()
-  public static function compareScore( $a, $b ) {
-    $rv = $a['score'] - $b['score'];
+  public static function __compareImageRating( Image $a, Image $b )
+  {
+    $rv = $a->rating - $b->rating;
     if (!$rv)
-      $rv = $a['votes'] - $b['votes'];
+      $rv = $a->votecount - $b->votecount;
     return ($rv > 0) - ($rv < 0);
   }
 

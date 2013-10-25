@@ -1,11 +1,11 @@
 <?php
-
-/*
-  ImageBrowser loads a set of images specified by a search term, user and page.
-*/
-
 require_once( 'lib/imagecatalog.php' );
+require_once('lib/image.php');
 
+
+/**
+ * ImageBrowser loads a set of images specified by a search term, user and page.
+ */
 class ImageBrowser extends ImageCatalog {
   protected $page = 0;
   protected $thumbsPerPage = 0;
@@ -92,23 +92,27 @@ class ImageBrowser extends ImageCatalog {
       }
 
       $this->thumbs = DB::query(
-        'SELECT SQL_CALC_FOUND_ROWS
-          i.`logged`, i.`keyword`, i.`thumb`, u.`name` AS `userName`,
-          COUNT(r.`rating`) + IFNULL(l.`votecount`, 0) AS `votes`,
+       'SELECT SQL_CALC_FOUND_ROWS
+          i.`id`, i.`hash`, i.`keyword`,
+          i.`thumb`, i.`width`, i.`height`, i.`logged`,
+          COUNT(r.`rating`) + IFNULL(l.`votecount`, 0) AS `votecount`,
           (IFNULL(SUM(r.`rating`), 0) + IFNULL(l.`rating`, 0) * IFNULL(l.`votecount`, 0)) / (COUNT(r.`rating`) + IFNULL(l.`votecount`, 0))
-            AS `score`,
-          COUNT(f.`user`) AS `favorited_count`
+          AS `rating`,
+          COUNT(f.`user`) AS `favorited_count`,
+          u.`id`, u.`name`
         FROM ' . DB::escape_identifier(TABLE_IMAGES) . ' AS i
           INNER JOIN ' . DB::escape_identifier(TABLE_USERS) . ' AS u ON u.`id` = i.`user`
           LEFT OUTER JOIN `pl_images_legacy` AS l ON i.`id` = l.`image`
           LEFT OUTER JOIN `pl_imageratings` AS r FORCE INDEX (PRIMARY) ON i.`id` = r.`image`
           LEFT OUTER JOIN `pl_favorite_images` AS f ON i.`id` = f.`image`
-        WHERE ' . $where_clause . ' AND (r.`user` IS NULL OR i.`id` <> r.`user`)
-          AND i.`delete_reason` = \'\'
+        WHERE (' . $where_clause . ') AND i.`delete_reason` = \'\' AND
+          (r.`user` IS NULL OR i.`id` <> r.`user`)
         GROUP BY i.`id`
         ORDER BY i.`id` DESC
         LIMIT :offset, :count',
-        $params);
+
+        $params,
+        array(PDO::FETCH_FUNC, __CLASS__.'::__fetchImageCallback'));
     }
 
     $this->totalResults = DB::foundRows();
@@ -128,6 +132,26 @@ class ImageBrowser extends ImageCatalog {
       }
     }
   }
+
+
+  public function __fetchImageCallback( $id, $hash, $keyword, $thumbnail, $width,
+    $height, $uploadtime, $votecount, $rating, $favorited_count, $uploaderId,
+    $uploaderName )
+  {
+    $i = new Image;
+    foreach ($i as $prop => &$value) {
+      if (isset(${$prop}))
+        $value = ${$prop};
+    }
+
+    $u = new User;
+    $u->id = $uploaderId;
+    $u->name = $uploaderName;
+    $i->setUploader($u);
+
+    return $i;
+  }
+
 
   public function loadRandom( $minScore, $thumbSize ) {
     $this->thumbs = DB::query(

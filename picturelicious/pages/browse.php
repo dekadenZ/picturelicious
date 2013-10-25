@@ -33,21 +33,21 @@ switch ($r[0])
       $iv->setCurrent(join('/', array_slice($r, $offset, $length)));
       $iv->load();
 
-      // Add comment if we have one
-      if ($user && $_POST['addComment'] &&
-        $iv->addComment($user->id, $_POST['content']))
-      {
-        $cache->clear( $iv->image['keyword'] );
-        http_redirect(
-          Config::$absolutePath . $iv->basePath . 'view/' . $iv->image['keyword']);
-        exit();
-      }
-
-      if (!empty($iv->image['id'])) {
-        $iv->loadComments();
-
-        $cache->capture();
-        include( Config::$templates.'view.tpl.php' );
+      if (!is_null($iv->image)) {
+        // Add comment if we have one
+        if ($user && isset($_POST['addComment']) &&
+          $iv->addComment($user->id, $_POST['content'])
+        ) {
+          $cache->clear($iv->image->keyword);
+          http_redirect(
+            Config::$absolutePath . $iv->basePath . 'view/' . $iv->image->keyword);
+          exit();
+        }
+        else {
+          //$iv->loadComments(); // TODO
+          $cache->capture();
+          include(Config::$templates . 'view.tpl.php');
+        }
       } else {
         notfound();
       }
