@@ -78,47 +78,48 @@ class ImageBrowser extends ImageCatalog {
     }
     else { // -------------------------------------------------------- user/all
       assert(is_int($this->thumbsPerPage));
+      $filter = array();
+      $params = array();
+      $flags = Image::FETCH_RATING | Image::FETCH_TAGS;
 
-      $params = array(
-          'offset' => $this->page * $this->thumbsPerPage,
-          'count' => $this->thumbsPerPage,
-        );
-
-      if (is_null($this->user)) {
-        $where_clause = 'TRUE';
+      if ($this->user) {
+        $filter[] = 'user';
+        $params[] = $this->user->id;
       } else {
-        $where_clause = 'i.`user` = :user';
-        $params['user'] = $this->user->id;
+        $flags |= Image::FETCH_UPLOADER;
       }
 
-      $this->thumbs = DB::query(
-       'SELECT SQL_CALC_FOUND_ROWS
-          i.`id`, i.`hash`, i.`keyword`,
-          i.`thumb`, i.`width`, i.`height`, i.`logged`,
-          COUNT(r.`rating`) + IFNULL(l.`votecount`, 0) AS `votecount`,
-          (IFNULL(SUM(r.`rating`), 0) + IFNULL(l.`rating`, 0) * IFNULL(l.`votecount`, 0)) / (COUNT(r.`rating`) + IFNULL(l.`votecount`, 0))
-          AS `rating`,
-          COUNT(f.`user`) AS `favorited_count`,
-          u.`id`, u.`name`
-        FROM ' . DB::escape_identifier(TABLE_IMAGES) . ' AS i
-          INNER JOIN ' . DB::escape_identifier(TABLE_USERS) . ' AS u ON u.`id` = i.`user`
-          LEFT OUTER JOIN `pl_images_legacy` AS l ON i.`id` = l.`image`
-          LEFT OUTER JOIN `pl_imageratings` AS r FORCE INDEX (PRIMARY) ON i.`id` = r.`image`
-          LEFT OUTER JOIN `pl_favorite_images` AS f ON i.`id` = f.`image`
-        WHERE (' . $where_clause . ') AND i.`delete_reason` = \'\' AND
-          (r.`user` IS NULL OR i.`id` <> r.`user`)
-        GROUP BY i.`id`
-        ORDER BY i.`id` DESC
-        LIMIT :offset, :count',
-
-        $params,
-        array(PDO::FETCH_FUNC, __CLASS__.'::__fetchImageCallback'));
+      $q = Image::buildQueryString($filter, $flags) . ' GROUP BY i.`id` ORDER BY i.`id` DESC LIMIT ?, ?';
+      array_push($params, $this->page * $this->thumbsPerPage, $this->thumbsPerPage);
+      $this->thumbs =
+        DB::query($q, $params,
+          array(PDO::FETCH_CLASS, 'Image', array(array('tags'))));
     }
 
-    $this->totalResults = DB::foundRows();
-    if (!is_null($this->user))
-      $this->user->imageCount = $this->totalResults;
+    /*
+     * Count total (undeleted) images:
+     * The separate query below is significantly faster than SQL_CALC_FOUND_ROWS
+     * on MariaDB 5.5.
+     */
+    $q =
+      'SELECT COUNT(*) FROM ' .
+        DB::escape_identifier(TABLE_IMAGES) .
+      'WHERE `delete_reason` = \'\'';
+    $params = array();
+    if ($this->user) {
+      $q .= ' AND `user`=?';
+      $params[] = $this->user->id;
+    }
+    $this->totalResults = DB::query_nofetch($q, $params)->fetchColumn();
 
+    if ($this->user) {
+      // Set user as uploader, because we only looked for his/her images previously
+      $this->user->imageCount = $this->totalResults;
+      foreach ($this->thumbs as $t) {
+        assert($t->uploader === $this->user->id);
+        $t->uploader = $this->user;
+      }
+    }
 
     // compute previous, current and next page
     if( $this->totalResults > 0 ) {
@@ -131,25 +132,6 @@ class ImageBrowser extends ImageCatalog {
         $this->pages['next'] = $this->page + 2;
       }
     }
-  }
-
-
-  public function __fetchImageCallback( $id, $hash, $keyword, $thumbnail, $width,
-    $height, $uploadtime, $votecount, $rating, $favorited_count, $uploaderId,
-    $uploaderName )
-  {
-    $i = new Image;
-    foreach ($i as $prop => &$value) {
-      if (isset(${$prop}))
-        $value = ${$prop};
-    }
-
-    $u = new User;
-    $u->id = $uploaderId;
-    $u->name = $uploaderName;
-    $i->setUploader($u);
-
-    return $i;
   }
 
 

@@ -39,7 +39,7 @@ class ImageViewer extends ImageCatalog
     $r = DB::query_nofetch(
       'CALL pl_find_image_prev_next(?, ?)',
       array($this->keyword, $this->user ? $this->user->id : null),
-      array(PDO::FETCH_CLASS, 'Image'));
+      array(PDO::FETCH_CLASS, 'Image', array(array('tags'))));
 
     $img = $r->fetch();
     if ($img === false)
