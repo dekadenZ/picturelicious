@@ -294,6 +294,9 @@ div.teaser {
   display: block;
 }
 
+.tag:not(:last-child):after { content: ", "; }
+
+
 /* Random thumbnails
 ---------------------------------------------------------*/
 

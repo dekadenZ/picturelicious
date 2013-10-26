@@ -3,6 +3,8 @@ require_once( 'lib/time.php' );
 
 
 $img = $iv->image;
+$htmltags = array_map('htmlspecialchars', $img->tags);
+$tagstring = join(', ', $htmltags);
 $uploader = $img->getUploader();
 
 ?>
@@ -51,7 +53,7 @@ $uploader = $img->getUploader();
   <?php } ?>
 
   <div id="imageContainer">
-    <img id="image" onclick="swap(this, 'scaled', 'full')" class="scaled" src="<?php echo Config::$absolutePath, Config::$images['imagePath'], $img->path; ?>" alt="<?php echo htmlspecialchars($img->tags) ?>"/>
+    <img id="image" onclick="swap(this, 'scaled', 'full')" class="scaled" src="<?php echo Config::$absolutePath, Config::$images['imagePath'], $img->path; ?>" alt="<?php echo $tagstring; ?>"/>
   </div>
 
   <div class="randomThumbs">
@@ -91,11 +93,17 @@ $uploader = $img->getUploader();
     </div>
 
     <div>
-      Tags: <span id="tags"><?php echo !empty($img->tags) ? htmlspecialchars($img->tags) : '<em>none</em>'; ?></span>
+      Tags:
+      <span id="tags"><?php if (empty($htmltags)) { ?>
+        <em>none</em>
+      <?php } else foreach ($htmltags as $tag) { ?>
+        <span class="tag"><?php echo $tag; ?></span>
+      <?php } ?></span>
+
       <?php if( $user->id ) { ?>
         <a href="#" onclick="swap($('addTag'), 'hidden', 'visible'); $('tagText').focus(); return false;">(add)</a>
         <form class="hidden" id="addTag" action="" onsubmit="return addTags(<?php echo $img->id; ?>, $('tagText'), <?php echo $user->admin ? 'true' : 'false';?>);">
-          <input type="text" name="tags" id="tagText" <?php if($user->admin) {?>value="<?php echo htmlspecialchars($img->tags);?>"<?php } ?>/>
+          <input type="text" name="tags" id="tagText" <?php if($user->admin) {?>value="<?php echo $tagstring;?>"<?php } ?>/>
           <input type="button" name="save" value="Add Tags" class="button" onclick="addTags(<?php echo $img->id; ?>, $('tagText'), <?php echo $user->admin ? 'true' : 'false';?>);"/>
           <div id="loadTags" class="load"></div>
         </form>
