@@ -24,7 +24,7 @@ class User
 
   // aggregated user info
   public $score;
-  public $imageCount;
+  public $imageCount, $commentCount, $tagCount;
 
   private $validationString;
   private $passwordHash;
@@ -33,7 +33,7 @@ class User
   private $modified;
 
 
-  public function __construct( $uniqueIdentifier = null, $fetchScore = false )
+  public function __construct( $uniqueIdentifier = null, $flags = 0 )
   {
     if (!is_null($uniqueIdentifier)) {
       if (is_integer($uniqueIdentifier)) {
@@ -45,7 +45,7 @@ class User
       }
 
       assert(isset($what));
-      $this->fetchBy(array($what => $uniqueIdentifier), $fetchScore);
+      $this->fetchBy(array($what => $uniqueIdentifier), $flags);
     }
   }
 
@@ -651,17 +651,75 @@ class User
   }
 
 
-  private function fetchBy( $what, $fetchScore = false )
+  private function fetchBy( $filter, $flags = 0 )
   {
-    if (!is_array($what))
-      $what = array($what => $this->{$what});
+    if (!is_array($filter)) {
+      $filter = array($filter => $this->{$filter});
+    } else {
+      assert(!empty($filter));
+    }
+
+    $r = DB::getRow(
+      DB::buildQueryString(__CLASS__, array_keys($filter), $flags),
+      array_values($filter),
+      array(PDO::FETCH_INTO, $this));
+
+    $this->__fix_types_internal();
+
+    return $r !== false;
+  }
+
+
+  private function __fix_types_internal()
+  {
+    foreach (array(
+        'score' => 'float',
+        'imageCount' => 'int')
+      as $prop => $type)
+    {
+      if (is_string($this->{$prop}) && !settype($this->{$prop}, $type))
+        throw new Exception("Could not convert '{$this->{$prop}}' to $type");
+    }
+  }
+
+  public static function fix_types( $user )
+  {
+    $user->__fix_types_internal();
+  }
+
+
+  const
+    FETCH_VERBATIM_FILTER = 1,
+    FETCH_INVALID = 2,
+    FETCH_SCORE = 4,
+    FETCH_ACCESS_TOKENS = 8;
+
+  public static function buildQuery( $filter = null, $flags = 0 )
+  {
+    if (!($flags & self::FETCH_VERBATIM_FILTER) && !empty($filter))
+      $filter = array_map(
+        function($c) { return 'u.' . DB::escape_identifier($c); },
+        $filter);
 
     $columns = 'u.`id`, u.`name`, u.`admin`, u.`website`, u.`email`, u.`avatar`';
+    $where_clause =
+      empty($filter) ? 'TRUE' : (join('=? AND ', $filter) . '=?');
     $tables = DB::escape_identifier(TABLE_USERS) . ' AS u';
 
-    if ($fetchScore) {
+    if ($flags & self::FETCH_ACCESS_TOKENS)
+      $columns .= ' u.`pass` AS `passwordHash, u.`remember` AS validationString';
+
+    if ($flags & self::FETCH_INVALID) {
+      $columns .= ' u.`valid`';
+    } else {
+      $where_clause .= ' AND u.`valid`';
+    }
+
+    if ($flags & self::FETCH_SCORE) {
       $columns .= ',
         i.`count` AS `imageCount`,
+        c.`count` AS `commentCount`,
+        t.`count` AS `tagCount`,
         IFNULL(l.`score`, 0) + IFNULL(i.`score`, 0) + IFNULL(iv.`score`, 0) + IFNULL(ir.`score`, 0) + IFNULL(c.`score`, 0) + IFNULL(t.`score`, 0) AS `score`';
       $tables .=
       ' LEFT OUTER JOIN `pl_users_legacy` AS l ON u.`id` = l.`user`
@@ -672,19 +730,8 @@ class User
         LEFT OUTER JOIN `plv_score_user_tags` AS t ON u.`id` = t.`user`';
     }
 
-    $r = DB::getRow(
-      "SELECT $columns FROM $tables WHERE u." .
-        join('=? AND u.', array_map('DB::escape_identifier', array_keys($what))) .
-        '=?',
-      array_values($what),
-      array(PDO::FETCH_INTO, $this));
-
-    if (is_string($this->score))
-      $this->score = floatval($this->score);
-    if (is_string($this->imageCount))
-      $this->imageCount = intval($this->imageCount);
-
-    return $r !== false;
+    //var_dump($columns, $tables, $where_clause);
+    return array($columns, $tables, $where_clause);
   }
 
 

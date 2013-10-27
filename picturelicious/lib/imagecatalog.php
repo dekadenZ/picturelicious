@@ -19,7 +19,7 @@ class ImageCatalog
 
   public function setUser( $name )
   {
-    $user = new User($name, true);
+    $user = new User($name, User::FETCH_SCORE);
     if (is_null($user->id))
       return false;
 
