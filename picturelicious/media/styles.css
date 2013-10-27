@@ -348,6 +348,10 @@ div.comment {
   margin: 10px 0;
 }
 
+.commentBody {
+  white-space: pre-wrap;
+}
+
 div.commentHead {
   color: #888;
   font-style: italic;

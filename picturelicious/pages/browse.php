@@ -44,7 +44,6 @@ switch ($r[0])
           exit();
         }
         else {
-          //$iv->loadComments(); // TODO
           $cache->capture();
           include(Config::$templates . 'view.tpl.php');
         }

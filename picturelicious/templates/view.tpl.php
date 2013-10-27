@@ -6,6 +6,7 @@ $img = $iv->image;
 $htmltags = array_map('htmlspecialchars', $img->tags);
 $tagstring = join(', ', $htmltags);
 $uploader = $img->getUploader();
+$comments = $img->getComments();
 
 ?>
 <h1>
@@ -115,32 +116,30 @@ $uploader = $img->getUploader();
 
 
     <div class="comments">
-      <?php if (count($iv->comments) === 1) { ?>
-        <h3>1 comment:</h3>
-      <?php } else if (count($iv->comments) > 1) { ?>
-        <h3><?php echo count($iv->comments) ?> comments:</h3>
-      <?php } else { ?>
+      <?php if (empty($comments)) { ?>
         <h3>No comments yet!</h3>
+      <?php } else { ?>
+        <h3><?php printf('%i comment%s:', count($comments), (count($comments) > 1) ? 's' : ''); ?></h3>
       <?php } ?>
 
-      <?php if (!empty($iv->comments)) foreach( $iv->comments as $c ) { ?>
+      <?php foreach ($comments as $c) { ?>
         <div class="comment">
           <div class="commentHead">
-            <img class="avatarSmall" width="16" height="16" src="<?php echo Config::$absolutePath.$c['avatar']; ?>"/>
-            <a href="<?php echo Config::$absolutePath.'user/'.$c['name']; ?>"><?php echo $c['name']; ?></a>
+            <img class="avatarSmall" width="16" height="16" src="<?php echo Config::$absolutePath,  $c->author->getAvatar(); ?>"/>
+            <a href="<?php echo Config::$absolutePath, 'user/', $c->author->name; ?>"><?php echo $c->author->name; ?></a>
             <?php
-            echo time_diff_human($c['created']);
+            echo time_diff_human($c->created);
             if($user->admin) { ?>
               <div style="float:right;" id="del">
-                <a href="#" onclick="return delComment(<?php echo $c['id']; ?>, this)">[x]</a>
+                <a href="#" onclick="return delComment(<?php echo $c->id; ?>, this)">[x]</a>
               </div>
             <?php } ?>
           </div>
-          <?php echo $c['content']; ?>
+          <div class="commentBody"><?php echo $c->getContent(true); ?></div>
         </div>
       <?php } ?>
 
-      <?php if( $user->id ) { ?>
+      <?php if ($user->id) { ?>
         <form method="post" class="addComment" action="<?php echo Config::$absolutePath, $iv->basePath, 'view/', $img->keyword; ?>">
           <div>
             <textarea name="content" rows="3" cols="60"></textarea>
