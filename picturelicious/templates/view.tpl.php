@@ -1,5 +1,6 @@
 <?php include( Config::$templates.'header.tpl.php' );
 require_once( 'lib/time.php' );
+require_once('lib/string.php');
 
 
 $img = $iv->image;
@@ -29,8 +30,8 @@ $comments = $img->getComments();
     </strong>
   </div>
   <div class="info">
-    Score: <strong><?php echo $uploader->score; ?></strong> /
-    Images: <strong><?php echo $uploader->imageCount; ?></strong>
+    Score: <strong><?php echo si_size($uploader->score, null, 3); ?></strong> /
+    Images: <strong><?php echo si_size($uploader->imageCount, null, 3); ?></strong>
     <?php if (!empty($uploader->website)) { ?>/
       Website: <strong><a href="<?php echo htmlspecialchars($uploader->website); ?>" target="_blank">
         <?php echo htmlspecialchars($uploader->website); ?>
@@ -75,7 +76,7 @@ $comments = $img->getComments();
       <div id="loadRating" class="load"></div>
       <span id="ratingDescription">
         <?php if ($img->votecount > 0) { ?>
-          <?php echo number_format($img->rating, 1);?> after <?php echo $img->votecount;?> Vote<?php echo $img->votecount > 1 ? 's' : '' ?>
+          <?php echo number_format($img->rating, 1);?> after <?php echo si_size($img->votecount, null, 3);?> Vote<?php echo $img->votecount > 1 ? 's' : '' ?>
         <?php } else { ?>
           No votes yet!
         <?php } ?>

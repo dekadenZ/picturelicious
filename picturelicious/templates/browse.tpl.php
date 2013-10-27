@@ -1,4 +1,7 @@
-<?php include( Config::$templates.'header.tpl.php' ); ?>
+<?php
+include(Config::$templates . 'header.tpl.php');
+require_once('lib/string.php');
+?>
 
 <h1>
   &raquo; Browsing
@@ -24,8 +27,8 @@
     </strong>
   </div>
   <div class="info">
-    Score: <strong><?php echo intval($ib->user->score); ?></strong> /
-    Images: <strong><?php echo $ib->user->imageCount; ?></strong>
+    Score: <strong><?php echo si_size($ib->user->score, null, 3); ?></strong> /
+    Images: <strong><?php echo si_size($ib->user->imageCount, null, 3); ?></strong>
     <?php if (!empty($ib->user->website)) { ?>/
       Website: <strong><a href="<?php echo htmlspecialchars($ib->user->website); ?>" target="_blank">
         <?php echo htmlspecialchars($ib->user->website); ?>
