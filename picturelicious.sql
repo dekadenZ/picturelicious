@@ -146,11 +146,16 @@ CREATE TABLE `pl_commentratings` (
 
 # Up and down votes excluding respective authors, aggregated by comment
 CREATE VIEW `plv_comments` AS
-SELECT c.*, SIGN(r.`rating`) AS `rating_type`, COUNT(r.`rating`) as `count`
-FROM `pl_comments` AS c LEFT OUTER JOIN `pl_commentratings` AS r
-ON c.`id` = r.`comment`
-WHERE c.`userId` <> r.`user`
-GROUP BY c.`id`, `rating_type`;
+SELECT
+  c.*,
+  SUM(r.`rating` > 0) AS `rating_positive`,
+  SUM(r.`rating` < 0) as `rating_negative`
+FROM
+  `pl_comments` AS c
+    LEFT OUTER JOIN
+  `pl_commentratings` AS r FORCE INDEX (PRIMARY) ON c.`id` = r.`comment`
+WHERE c.`author` <> r.`user`
+GROUP BY c.`id`;
 
 
 CREATE TABLE `pl_imagecolors` (
