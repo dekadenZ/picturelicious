@@ -120,6 +120,7 @@ CREATE TABLE `pl_comments` (
   `image` BIGINT UNSIGNED NOT NULL,
   `user` BIGINT UNSIGNED NOT NULL,
   `created` BIGINT NOT NULL,
+  `edited` BIGINT NOT NULL,
   `content` TEXT NOT NULL,
   `delete_reason` ENUM('', 'other', 'spam', 'illegal') NOT NULL DEFAULT '',
   PRIMARY KEY  (`id`),
