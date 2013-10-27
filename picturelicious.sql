@@ -126,6 +126,7 @@ CREATE TABLE `pl_comments` (
   PRIMARY KEY  (`id`),
   FOREIGN KEY (`userId`) REFERENCES `pl_users` (`id`),
   FOREIGN KEY (`imageId`) REFERENCES `pl_images` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`parent`) REFERENCES `pl_comments` (`id`),
   INDEX `image` (`imageId`) USING HASH,
   INDEX `user` (`userId`) USING HASH,
   INDEX `parent` (`parent`) USING HASH
