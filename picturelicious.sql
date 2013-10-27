@@ -117,8 +117,8 @@ GROUP BY i.`id`;
 CREATE TABLE `pl_comments` (
   `id` SERIAL,
   `parent` BIGINT UNSIGNED,
-  `imageId` BIGINT UNSIGNED NOT NULL,
-  `userId` BIGINT UNSIGNED NOT NULL,
+  `image` BIGINT UNSIGNED NOT NULL,
+  `user` BIGINT UNSIGNED NOT NULL,
   `created` BIGINT NOT NULL,
   `content` TEXT NOT NULL,
   `delete_reason` ENUM('', 'other', 'spam', 'illegal') NOT NULL DEFAULT '',
@@ -219,11 +219,11 @@ GROUP BY `user`;
 
 # User scores from comment ratings by other users, aggregated by user
 CREATE VIEW `plv_score_user_comments` AS
-SELECT r.`user` AS `user`, COUNT(`rating`) AS `count`, SUM(`rating`) * 1 AS `score`
-FROM `pl_commentratings` AS r INNER JOIN `pl_comments` AS c
-ON c.`id` = r.`comment`
-WHERE r.`user` <> c.`userId` AND `delete_reason` = ''
-GROUP BY `user`;
+SELECT r.`user`, COUNT(r.`rating`) AS `count`, SUM(r.`rating`) * 1 AS `score`
+FROM `pl_commentratings` AS r
+  INNER JOIN `pl_comments` AS c ON c.`id` = r.`comment`
+WHERE r.`user` <> c.`author` AND c.`delete_reason` = ''
+GROUP BY r.`user`;
 
 # Support view for subquery in `plv_score_user_tags`
 CREATE VIEW `plv_score_user_image_tags` AS

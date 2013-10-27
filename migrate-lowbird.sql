@@ -28,7 +28,7 @@ WHERE old.`votes` > 0 OR (old.`tags` IS NOT NULL AND old.`tags` <> '');
 
 
 INSERT INTO `pl_comments`
-	(`id`, `imageId`, `userId`, `created`, `content`)
+	(`id`, `image`, `author`, `created`, `content`)
 SELECT c.`id`, c.`imageId`, c.`userId`, UNIX_TIMESTAMP(c.`created`), c.`content`
 FROM `pl_images` AS i INNER JOIN `lowbird`.`lb_comments` AS c
 ON i.`id` = c.`imageId`;
