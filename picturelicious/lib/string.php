@@ -9,10 +9,10 @@ function si_size($value, $unit = NULL, $digits = 2, $base = 1000)
 {
   assert($base == 1000 || $base == 1024);
 
+  $log_base = 0;
   if ($value != 0) {
-    $log_base = 0;
     $log_base_max = strlen(SI_PREFIXES);
-    while ($logbase <= $log_base_max && abs($value) >= $base) {
+    while ($log_base <= $log_base_max && abs($value) >= $base) {
       $value /= $base;
       $log_base++;
     }
