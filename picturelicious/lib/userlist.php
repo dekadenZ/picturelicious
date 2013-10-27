@@ -1,57 +1,55 @@
 <?php
-
-/*
-  The UserList class loads a number of users from the database, specified by a page
-*/
-
 require_once( 'lib/config.php' );
 require_once( 'lib/db.php' );
+require_once('lib/users.php');
 
-class UserList {
-  protected $page = 0;
 
-  protected $usersPerPage = 0;
-  protected $totalResults = 0;
+/**
+ * The UserList class loads a number of users from the database, specified by a
+ * page.
+ */
+class UserList
+{
+  protected $usersPerPage;
 
-  public $users = array();
-  public $pages = array();
+  public $users, $totalResults;
+  public $pages;
+
 
   public function __construct( $usersPerPage ) {
-    $this->usersPerPage = abs(intval($usersPerPage));
+    $this->usersPerPage = $usersPerPage;
+    $this->pages = new stdclass;
   }
+
 
   public function setPage( $page ) {
-    $page = intval($page);
-    $this->page = $page > 0 ? $page - 1 : 0;
+    $this->pages->current = max(intval($page), 1);
   }
 
-  public function load() {
-    $this->users = DB::query( 
-      'SELECT SQL_CALC_FOUND_ROWS 
-        UNIX_TIMESTAMP( u.registered ) as registered, 
-        u.name, u.score, u.images, u.avatar, u.website
-      FROM '.TABLE_USERS.' u
-      WHERE valid = 1
-      GROUP BY u.id
-      ORDER BY u.score DESC
-      LIMIT :1, :2',
-      $this->page * $this->usersPerPage, 
-      $this->usersPerPage
-    );
+
+  public function load()
+  {
+    $q = User::buildQuery(null, User::FETCH_SCORE);
+    $this->users = DB::query(
+      "SELECT SQL_CALC_FOUND_ROWS $q[0] FROM $q[1] WHERE $q[2] GROUP BY u.`id` ORDER BY `score` DESC LIMIT ?, ?",
+      array(
+        ($this->pages->current - 1) * $this->usersPerPage,
+        $this->usersPerPage),
+      array(PDO::FETCH_CLASS, 'User'));
+
+    array_walk($this->users, 'User::fix_types');
     $this->totalResults = DB::foundRows();
+    $this->pages->total = ceil($this->totalResults / $this->usersPerPage);
 
     // compute previoues, current and next page
-    if( $this->totalResults > 0 ) {
-      $this->pages['current'] = $this->page+1;
-      $this->pages['total'] = ceil($this->totalResults / $this->usersPerPage);
-      if( $this->page > 0 ) {
-        $this->pages['prev'] = $this->page;
-      }
-      if( $this->totalResults > $this->usersPerPage * $this->page + $this->usersPerPage ) {
-        $this->pages['next'] = $this->page + 2;
-      }
+    if ($this->totalResults) {
+      $this->pages->prev =
+        ($this->pages->current > 1) ? $this->pages->current - 1 : null;
+      $this->pages->next =
+        ($this->pages->current < $this->pages->total) ? $this->pages->current + 1 : null;
     }
   }
+
 }
 
 ?>
