@@ -89,7 +89,7 @@ class ImageBrowser extends ImageCatalog {
         $flags |= Image::FETCH_UPLOADER;
       }
 
-      $q = Image::buildQueryString($filter, $flags) . ' GROUP BY i.`id` ORDER BY i.`id` DESC LIMIT ?, ?';
+      $q = DB::buildQueryString('Image', $filter, $flags) . ' GROUP BY i.`id` ORDER BY i.`id` DESC LIMIT ?, ?';
       array_push($params, $this->page * $this->thumbsPerPage, $this->thumbsPerPage);
       $this->thumbs =
         DB::query($q, $params,

@@ -219,6 +219,26 @@ class DB
     return '`' . str_replace('`', '``', $name) . '`';
   }
 
+
+  public static function buildQueryString( $src )
+  {
+    if (is_array($src)) {
+      $parts = $src;
+    } else if (is_string($src) || is_object($src)) {
+      $parts = call_user_func_array(
+          array($src, 'buildQuery'),
+          array_slice(func_get_args(), 1));
+    } else {
+      throw new Exception('Invalid argument type ' . gettype($src) . ' for ' . __METHOD__);
+    }
+
+    $q = "SELECT $parts[0] FROM $parts[1]";
+    if (!empty($parts[2]))
+      $q .= " WHERE ($parts[2])";
+
+    return $q;
+  }
+
 }
 
 ?>
