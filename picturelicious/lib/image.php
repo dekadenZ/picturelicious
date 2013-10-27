@@ -17,6 +17,7 @@ class Image
   public $votecount;
   public $rating;
   public $favorited_count;
+  public $comments;
 
   private $tags;
 
@@ -65,11 +66,11 @@ class Image
   }
 
 
-  public function getUploader( $fetchScore = false )
+  public function getUploader( $flags = 0 )
   {
     if (is_integer($this->uploader)) {
-      $this->uploader = new User($this->uploader, $fetchScore);
-    } else if ($fetchScore && $this->uploader instanceof User) {
+      $this->uploader = new User($this->uploader, $flags);
+    } else if ($this->uploader instanceof User && ($flags & User::FETCH_SCORE)) {
       assert(!is_null($this->uploader->score)); // unimplemented
     }
     return $this->uploader;
@@ -100,7 +101,7 @@ class Image
     }
 
     $r = DB::getRow(
-      self::buildQueryString(array_keys($filter), $flags),
+      DB::buildQueryString(__CLASS__, array_keys($filter), $flags),
       array_values($filter),
       array(PDO::FETCH_INTO, $this));
 
@@ -108,6 +109,17 @@ class Image
       $this->tags = explode("\0", $this->tags);
 
     return $r !== false;
+  }
+
+
+  public function getComments()
+  {
+    if (is_null($this->comments)) {
+      $this->comments =
+        Comment::fetchAll(array('image' => $this->id),
+          array('flags' => Comment::FETCH_RESOLVE_PARENTS));
+    }
+    return $this->comments;
   }
 
 
@@ -124,11 +136,9 @@ class Image
    * views with a GROUP BY clause into new queries. Instead it uses temporary
    * tables, which are awfully slow.
    */
-  public static function buildQuery( $filter = array(), $flags = 0 )
+  public static function buildQuery( $filter = null, $flags = 0 )
   {
-    assert(is_array($filter));
-
-    if (!($flags & self::FETCH_VERBATIM_FILTER))
+    if (!($flags & self::FETCH_VERBATIM_FILTER) && !empty($filter))
       $filter = array_map(
         function($c) { return 'i.' . DB::escape_identifier($c); },
         $filter);
@@ -176,12 +186,6 @@ class Image
     return array($columns, $tables, $where_clause);
   }
 
-
-  public static function buildQueryString()
-  {
-    $parts = call_user_func_array(__CLASS__.'::buildQuery', func_get_args());
-    return "SELECT $parts[0] FROM $parts[1] WHERE ($parts[2])";
-  }
 }
 
 ?>
