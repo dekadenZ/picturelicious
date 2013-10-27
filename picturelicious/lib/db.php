@@ -104,6 +104,8 @@ class DB
       if (self::$result)
         self::$result->closeCursor();
 
+      //var_dump($q, $params);
+
       if (empty($params) && empty($fetch_mode)) {
         self::$result = $r = self::$link->query($q);
       } else {
