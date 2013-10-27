@@ -1,6 +1,8 @@
 <?php
 require_once( 'lib/imagecatalog.php' );
 require_once('lib/image.php');
+require_once('lib/comment.php');
+
 
 /**
  * ImageViewer loads a single image and its comments specified by a keyword
@@ -12,7 +14,6 @@ class ImageViewer extends ImageCatalog
 
   public $image = null;
   public $stream = array();
-  public $comments = null;
 
 
   public function setCurrent( $keyword ) {
@@ -66,28 +67,6 @@ class ImageViewer extends ImageCatalog
     return true;
   }
 
-
-  public function loadComments()
-  {
-    $this->comments = DB::query(
-      'SELECT
-        c.id, c.content, u.name, u.avatar,
-        UNIX_TIMESTAMP(c.created) AS created
-      FROM '.TABLE_COMMENTS.' c
-      LEFT JOIN '.TABLE_USERS.' u
-        ON u.id = c.userId
-      WHERE c.imageId = :1
-      ORDER BY created',
-      $this->image->id
-    );
-
-    foreach ($this->comments as &$comment) {
-      $comment['content'] = nl2br(preg_replace(
-        '#(?<!\w)(((http|https|ftp)://)|(www\.))([^\s<>]+)#i',
-        "<a href=\"$3://$4$5\">$4$5</a>",
-        htmlspecialchars($comments['content'])));
-    }
-  }
 }
 
 ?>
