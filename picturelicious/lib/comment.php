@@ -137,7 +137,7 @@ class Comment
     $content = $this->content;
     if (!empty($content) && $htmlWithLinks) {
       $content = preg_replace_callback(
-        '/[<>"&]+|(?<lparen>[\[(<]?)\b(?<uri>(?:(?<scheme>https?|ftp|urn|magnet|mailto|xmpp|irc):|www\.)[-\p{L}\p{N}\p{S}\p{Cs}+&@#\/%?=~_()|!:,.;\']*[-\p{L}\p{N}\p{S}\p{Cs}+&@#\/%=~_(|])(?<tparen>[\])>]?)/u',
+        '/[<>"&]+|(?<lparen>[\[(<]?)\b(?<uri>(?:(?<scheme>https?|ftp|urn|magnet|mailto|xmpp|irc|mumble|teamspeak):|www\.)[-\p{L}\p{N}\p{S}\p{Cs}+&@#\/%?=~_()|!:,.;\']*[-\p{L}\p{N}\p{S}\p{Cs}+&@#\/%=~_(|])(?<tparen>[\])>]?)/u',
         function($m) {
           if (strlen($m[0]) === 1)
             return htmlspecialchars($m[0]);
