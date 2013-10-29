@@ -130,6 +130,7 @@ CREATE TABLE `pl_comments` (
   INDEX `image` (`imageId`) USING HASH,
   INDEX `user` (`userId`) USING HASH,
   INDEX `parent` (`parent`) USING HASH
+  INDEX `edited` (`edited` DESC) USING BTREE
 ) ENGINE=InnoDB;
 
 
