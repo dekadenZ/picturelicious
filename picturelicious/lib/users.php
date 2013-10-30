@@ -28,6 +28,7 @@ class User
 
   private $validationString;
   private $passwordHash;
+  private $nextUploadTime;
 
   // set whenever this object differs from it's database representation
   private $modified;
@@ -740,6 +741,27 @@ class User
     return empty($this->avatar) ?
       Config::$images['avatarsPath'] . 'default.png' :
       $this->avatar;
+  }
+
+
+  public function getNextUploadTime()
+  {
+    if (is_null($this->nextUploadTime)) {
+      $r = DB::query_nofetch(
+        'SELECT IFNULL(pl_get_next_upload_time(?, ?, ?), 0)',
+        array($this->id, 10, 7200));
+      assert($r);
+      $this->nextUploadTime = $r->fetchColumn();
+      assert($this->nextUploadTime !== false);
+      $r->closeCursor();
+    }
+    return $this->nextUploadTime;
+  }
+
+
+  public function canUpload()
+  {
+    return $this->getNextUploadTime() <= time();
   }
 
 }
