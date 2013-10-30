@@ -17,7 +17,9 @@ function si_size($value, $unit = NULL, $digits = 2, $base = 1000)
       $log_base++;
     }
 
-    $decimals = max($digits - ((int) log10(abs($value))) - 1, 0);
+    $decimals = ($log_base || !is_int($value)) ?
+      max($digits - ((int) log10(abs($value))) - 1, 0) :
+      0;
   } else {
     $decimals = 0;
   }
