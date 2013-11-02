@@ -55,7 +55,7 @@ $comments = $img->getComments();
   <?php } ?>
 
   <div id="imageContainer">
-    <img id="image" onclick="swap(this, 'scaled', 'full')" class="scaled" src="<?php echo Config::$absolutePath, Config::$images['imagePath'], $img->path; ?>" alt="<?php echo $tagstring; ?>"/>
+    <img id="image" onclick="swap(this, 'scaled', 'full')" class="scaled" src="<?php echo Config::$absolutePath, Config::$images['imagePath'], $img->getPath(); ?>" alt="<?php echo $tagstring; ?>"/>
   </div>
 
   <div class="randomThumbs">
@@ -112,7 +112,7 @@ $comments = $img->getComments();
       <?php } ?>
     </div>
 
-    Post in forum: <input type="text" readonly="1" value="[URL=<?php echo Config::$frontendPath ?>][IMG]<?php echo Config::$frontendPath, Config::$images['imagePath'], $img->path; ?>[/IMG][/URL]" style="width: 400px; font-size:10px" onclick="this.focus();this.select();"/>
+    Post in forum: <input type="text" readonly="1" value="[URL=<?php echo Config::$frontendPath ?>][IMG]<?php echo Config::$frontendPath, Config::$images['imagePath'], $img->getPath(); ?>[/IMG][/URL]" style="width: 400px; font-size:10px" onclick="this.focus();this.select();"/>
 
 
 

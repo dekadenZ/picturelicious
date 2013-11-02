@@ -82,9 +82,9 @@ class Config {
     // percentage:    Percentage of thumbnails in this size
     // dir:       Name of the subdir with thumbs in this size
     'classes' => array(
-      'b2' => array( 'width'=>1, 'height'=>1, 'percentage'=>0.6,  'dir'=>'64x64' ),
-      'b1' => array( 'width'=>2, 'height'=>2, 'percentage'=>0.35, 'dir'=>'128x128' ),
-      'b0' => array( 'width'=>3, 'height'=>3, 'percentage'=>0.05, 'dir'=>'192x192' )
+      'b2' => array( 'width'=>1, 'height'=>1, 'percentage'=>0.6,  'dir'=>64 ),
+      'b1' => array( 'width'=>2, 'height'=>2, 'percentage'=>0.35, 'dir'=>128 ),
+      'b0' => array( 'width'=>3, 'height'=>3, 'percentage'=>0.05, 'dir'=>192 )
     ),
   );
 

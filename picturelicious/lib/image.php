@@ -17,7 +17,7 @@ class Image
   public $favorited_count;
   public $comments;
 
-  private $tags;
+  private $tags, $path, $thumbnail;
 
   public $gridData;
 
@@ -44,7 +44,11 @@ class Image
   public function __get( $prop )
   {
     $prop = 'get' . ucfirst($prop);
-    return $this->$prop();
+    if (is_callable(array($this, $prop))) {
+      return $this->$prop();
+    } else {
+      throw new Exception('Call to undefined method ' . __CLASS__ . "::{$prop}()");
+    }
   }
 
 
@@ -118,6 +122,32 @@ class Image
           array('flags' => Comment::FETCH_RESOLVE_PARENTS));
     }
     return $this->comments;
+  }
+
+
+  public function getPath()
+  {
+    if (is_null($this->path) && !empty($this->hash)) {
+      $this->path = bin2hex($this->hash);
+    }
+    return $this->path;
+  }
+
+
+  public function getThumbnail()
+  {
+    if (is_null($this->thumbnail) && $this->gridData &&
+      !empty($this->gridData['class']))
+    {
+      $path = $this->getPath();
+      if (!empty($this->path)) {
+        $this->thumbnail =
+          Config::$absolutePath . Config::$images['thumbPath'] .
+          Config::$gridView['classes'][$this->gridData['class']]['dir'] .
+          '/' . $this->getPath();
+      }
+    }
+    return $this->thumbnail;
   }
 
 

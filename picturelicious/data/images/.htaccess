@@ -1,0 +1,5 @@
+RewriteEngine on 
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(([[:xdigit:]]{2})([[:xdigit:]]{2})[[:xdigit:]]{36})($|[./]) ${lc:$2}/${lc:$3}/${lc:$1}
