@@ -30,11 +30,11 @@ tee >(exec mysql -B "$newschema")
 
 # split tags
 mysql -B -r "$oldschema" <<-'EOF' |
-SELECT CONCAT(
-		REPLACE(`tags`, ' ', CONCAT(' ', `id`, '\n')), ' ', `id`, '\n',
-		REPLACE(SUBSTRING(`keyword`, 9), '-', CONCAT(' ', `id`, '\n')), ' ', `id`
-	) AS `tag_id`
-FROM `lb_images`;
+	SELECT CONCAT(
+			REPLACE(`tags`, ' ', CONCAT(' ', `id`, '\n')), ' ', `id`, '\n',
+			REPLACE(SUBSTRING(`keyword`, 9), '-', CONCAT(' ', `id`, '\n')), ' ', `id`
+		) AS `tag_id`
+	FROM `lb_images`;
 EOF
 sed -nre '
 	1 a SET max_heap_table_size = 4<<30; SET tmp_table_size = 4<<30; CREATE TEMPORARY TABLE `pl_tags_migrate` (`image` BIGINT UNSIGNED NOT NULL, `tag` VARCHAR(127) NOT NULL) ENGINE=MEMORY;
