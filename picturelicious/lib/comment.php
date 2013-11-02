@@ -53,8 +53,7 @@ class Comment
       $tables .= ' STRAIGHT_JOIN ' . DB::escape_identifier(TABLE_IMAGES) . ' AS i ON c.`image` = i.`id`';
       $columns .= ',
         i.`id` AS `image->id`,
-        i.`keyword` AS `image->keyword`,
-        i.`thumb` AS `image->thumbnail`';
+        i.`keyword` AS `image->keyword`';
       if ($flags & self::FETCH_DELETED)
         $where_clause .= ' i.`delete_reason` = \'\' AND';
     } else {

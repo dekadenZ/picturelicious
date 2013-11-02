@@ -146,14 +146,13 @@ BEGIN
 
   SELECT
     `id`, `keyword`, `hash`,
-    CONCAT(DATE_FORMAT(FROM_UNIXTIME(`logged`), '%Y/%m/'), `image`) AS `path`,
     `width`, `height`,
     `user` AS `uploader`,
     `logged` AS `uploadtime`,
     `tags`, `votecount`, `rating`, `favorited_count`
   FROM ((
     SELECT
-      `id`, `keyword`, `hash`, `image`, `width`, `height`, `user`, `logged`,
+      `id`, `keyword`, `hash`, `width`, `height`, `user`, `logged`,
       NULL AS `tags`, NULL AS `votecount`, NULL AS `rating`, NULL AS `favorited_count`
     FROM `pl_images`
     WHERE `id` < _id AND `delete_reason` = '' AND IFNULL(`user` = _user, TRUE)
@@ -161,7 +160,7 @@ BEGIN
   ) UNION ALL (
     SELECT
       i.`id`, i.`keyword`, i.`hash`,
-      i.`image`, i.`width`, `height`,
+      i.`width`, `height`,
       i.`user`, i.`logged`,
       GROUP_CONCAT(t.`tag` SEPARATOR '\0') AS `tags`,
       COUNT(r.`rating`) + IFNULL(l.`votecount`, 0) AS `votecount`,
@@ -182,7 +181,7 @@ BEGIN
     GROUP BY i.`id`
   ) UNION ALL (
     SELECT
-      `id`, `keyword`, `hash`, `image`, `width`, `height`, `user`, `logged`,
+      `id`, `keyword`, `hash`, `width`, `height`, `user`, `logged`,
       NULL AS `tags`, NULL AS `votecount`, NULL AS `rating`, NULL AS `favorited_count`
     FROM `pl_images`
     WHERE `id` > _id AND `delete_reason` = '' AND IFNULL(`user` = _user, TRUE)

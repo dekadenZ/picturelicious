@@ -7,8 +7,6 @@ class Image
   public $id;
   public $hash;
   public $keyword;
-  public $path;
-  public $thumbnail;
   public $width;
   public $height;
   public $uploader;
@@ -147,8 +145,7 @@ class Image
     $where_clause =
       empty($filter) ? 'TRUE' : (join('=? AND ', $filter) . '=?');
     $columns =
-      'i.`id`, i.`hash`, i.`keyword`, i.`width`, `height`, i.`logged` AS `uploadtime`, i.`thumb` AS `thumbnail`,
-      CONCAT(DATE_FORMAT(FROM_UNIXTIME(i.`logged`), \'%Y/%m/\'), i.`image`) AS `path`';
+      'i.`id`, i.`hash`, i.`keyword`, i.`width`, `height`, i.`logged` AS `uploadtime`';
 
     if ($flags & self::FETCH_DELETED) {
       $columns .= ', i.`delete_reason';

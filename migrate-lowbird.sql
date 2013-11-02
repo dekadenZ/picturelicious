@@ -15,8 +15,8 @@ WHERE `score` IS NOT NULL AND `score` <> 0;
 
 
 INSERT INTO `pl_images`
-	(`id`, `logged`, `user`, `keyword`, `image`, `thumb`, `source`)
-SELECT i.`id`, UNIX_TIMESTAMP(i.`logged`), i.`user`, i.`keyword`, i.`image`, i.`thumb`, NULLIF(i.`source`, '')
+	(`id`, `logged`, `user`, `keyword`, `image`, `source`)
+SELECT i.`id`, UNIX_TIMESTAMP(i.`logged`), i.`user`, i.`keyword`, i.`image`, NULLIF(i.`source`, '')
 FROM `pl_users` AS u INNER JOIN `lowbird`.`lb_images` AS i
 ON i.`user` = u.`id`;
 
@@ -24,7 +24,7 @@ INSERT INTO `pl_images_legacy`
 SELECT old.`id`, GREATEST(old.`votes`, 0), GREATEST(old.`score`, 0), NULLIF(old.`tags`, '')
 FROM `pl_images` AS new INNER JOIN `lowbird`.`lb_images` AS old
 ON new.`id` = old.`id`
-WHERE old.`votes` > 0 OR (old.`tags` IS NOT NULL AND old.`tags` <> '');
+WHERE old.`votes` > 0 OR (old.`tags` IS NOT NULL AND old.`tags` <> '');
 
 
 INSERT INTO `pl_comments`

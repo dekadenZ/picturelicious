@@ -59,9 +59,6 @@ class GridView {
 
       $t = $thumbs[$i];
       $t->gridData = array('class' => $currentClass);
-      $t->thumbnail = $pathPrefix . date('Y/m', $t->uploadtime)
-        .'/'. $classes[$currentClass]['dir']
-        .'/'. $t->thumbnail;
     }
 
     // Now that every thumb has a CSS-Class, we can sort them into our grid

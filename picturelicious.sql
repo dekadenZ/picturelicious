@@ -47,7 +47,6 @@ CREATE TABLE `pl_images` (
   `user` BIGINT UNSIGNED NOT NULL,
   `keyword` VARCHAR(255) NOT NULL,
   `image` VARCHAR(255) NOT NULL,
-  `thumb` VARCHAR(255) NOT NULL,
   `hash` BINARY(20) NOT NULL,
   `source` VARCHAR(1023),
   `delete_reason` ENUM('', 'other', 'repost', 'low quality', 'copyright', 'spam', 'hardcore porn/gore', 'illegal') NOT NULL DEFAULT '',
