@@ -12,25 +12,22 @@ switch ($r[0])
       $iv = new ImageViewer();
 
       switch ($r[0]) {
-        case 'search': // /search/term/view/2007/09/hans
+        case 'search': // /search/term/view/[hash]/[keyword]
           $iv->setSearch(@$r[1]);
           $offset = 3;
-          $length = null;
           break;
 
-        case 'user': // /user/name/view/2007/09/hans
+        case 'user': // /user/name/view/[hash]/[keyword]
           $iv->setUser(@$r[1]);
           $offset = 3;
-          $length = 3;
           break;
 
-        default: // /all/view/2007/09/hans
+        default: // /all/view/[hash]/[keyword]
           $offset = 2;
-          $length = 3;
           break;
       }
 
-      $iv->setCurrent(join('/', array_slice($r, $offset, $length)));
+      $iv->setCurrentHex(@$r[$offset]);
       $iv->load();
 
       if (!is_null($iv->image)) {

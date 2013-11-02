@@ -132,7 +132,7 @@ END $$
 
 DROP PROCEDURE IF EXISTS pl_find_image_prev_next $$
 CREATE PROCEDURE pl_find_image_prev_next (
-  IN _keyword VARCHAR(255),
+  IN _hash BINARY(20),
   IN _user BIGINT UNSIGNED
 )
   READS SQL DATA
@@ -142,7 +142,7 @@ BEGIN
 
   SELECT `id` INTO _id
     FROM `pl_images`
-    WHERE `keyword` = _keyword AND IFNULL(`user` = _user, TRUE);
+    WHERE `hash` = _hash AND IFNULL(`user` = _user, TRUE);
 
   SELECT
     `id`, `keyword`, `hash`,

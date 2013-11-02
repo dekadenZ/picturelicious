@@ -62,7 +62,7 @@ require_once('lib/string.php');
   foreach( $ib->thumbs as $thumb ) {
     if (isset($thumb->gridData['left']) ) {
     echo '<div class="', $thumb->gridData['class'], '" style="left:', $thumb->gridData['left'], 'px; top:', $thumb->gridData['top'], 'px;"><a class="thumb" href="',
-      Config::$absolutePath.$imgBasePath, 'view/', $thumb->keyword, '">',
+      Config::$absolutePath, $imgBasePath, 'view/', $thumb->getLink(), '">',
       '<img src="', $thumb->getThumbnail(), '" alt="', $thumb->keyword, '" title="', $thumb->uploader->name, ' - ',
       date('d. M Y H:i', $thumb->uploadtime), '"/></a></div>', "\n";
     }

@@ -2,22 +2,27 @@
 require_once( 'lib/imagecatalog.php' );
 require_once('lib/image.php');
 require_once('lib/comment.php');
+require_once('lib/string.php');
 
 
 /**
- * ImageViewer loads a single image and its comments specified by a keyword
+ * ImageViewer loads a single image and its comments specified by a hash
  */
 class ImageViewer extends ImageCatalog
 {
   protected $position = 0;
-  protected $keyword = null;
+  protected $hash = null;
 
   public $image = null;
   public $stream = array();
 
 
-  public function setCurrent( $keyword ) {
-    $this->keyword = $keyword;
+  public function setCurrent( $hash ) {
+    $this->hash = $hash;
+  }
+
+  public function setCurrentHex( $hexhash ) {
+    $this->setCurrent(hex2bin($hexhash));
   }
 
   public function addComment( $userId, $comment ) {
@@ -39,15 +44,15 @@ class ImageViewer extends ImageCatalog
   {
     $r = DB::query_nofetch(
       'CALL pl_find_image_prev_next(?, ?)',
-      array($this->keyword, $this->user ? $this->user->id : null),
+      array($this->hash, $this->user ? $this->user->id : null),
       array(PDO::FETCH_CLASS, 'Image', array(array('tags'))));
 
     $img = $r->fetch();
     if ($img === false)
       return false;
 
-    if ($img->keyword !== $this->keyword) {
-      $this->stream['prev'] = $img->keyword;
+    if ($img->hash !== $this->hash) {
+      $this->stream['prev'] = $img;
       $img = $r->fetch();
     }
 
@@ -57,7 +62,7 @@ class ImageViewer extends ImageCatalog
     $img = $r->fetch();
 
     if ($img !== false) {
-      $this->stream['next'] = $img->keyword;
+      $this->stream['next'] = $img;
     }
 
     $r->nextRowset();

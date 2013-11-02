@@ -17,7 +17,7 @@ $comments = $img->getComments();
   <?php } else if( !empty($iv->channel) ) { ?>
     channel: <a href="<?php echo Config::$absolutePath, 'channel/', $iv->channel['keyword']; ?>"><?php echo $iv->channel['name']; ?></a>
   <?php } else { ?>
-    "<?php echo htmlspecialchars($img->path) ?>" // posted
+    "<?php echo htmlspecialchars($img->keyword) ?>" // posted
     <?php echo time_diff_human($img->uploadtime);
   } ?>
 </h1>
@@ -43,13 +43,13 @@ $comments = $img->getComments();
 
 <div id="viewer">
   <?php if( isset($iv->stream['prev']) ) { ?>
-    <a href="<?php echo Config::$absolutePath, $iv->basePath, 'view/', $iv->stream['prev']; ?>" class="prev" id="prevBar" title="Previous">Previous</a>
+    <a href="<?php echo Config::$absolutePath, $iv->basePath, 'view/', $iv->stream['prev']->getLink(); ?>" class="prev" id="prevBar" title="Previous">Previous</a>
   <?php } else { ?>
     <div class="noPrev" id="prevBar">Previous</div>
   <?php } ?>
 
   <?php if( isset($iv->stream['next']) ) { ?>
-    <a href="<?php echo Config::$absolutePath, $iv->basePath, 'view/', $iv->stream['next']; ?>" class="next" id="nextBar" title="Next">Next</a>
+    <a href="<?php echo Config::$absolutePath, $iv->basePath, 'view/', $iv->stream['next']->getLink(); ?>" class="next" id="nextBar" title="Next">Next</a>
   <?php } else { ?>
     <div class="noNext" id="nextBar">Next</div>
   <?php } ?>
@@ -112,7 +112,7 @@ $comments = $img->getComments();
       <?php } ?>
     </div>
 
-    Post in forum: <input type="text" readonly="1" value="[URL=<?php echo Config::$frontendPath ?>][IMG]<?php echo Config::$frontendPath, Config::$images['imagePath'], $img->getPath(); ?>[/IMG][/URL]" style="width: 400px; font-size:10px" onclick="this.focus();this.select();"/>
+    Post in forum: <input type="text" readonly="1" value="[URL=<?php echo Config::$frontendPath ?>][IMG]<?php echo Config::$frontendPath, Config::$images['imagePath'], $img->getLink(); ?>[/IMG][/URL]" style="width: 400px; font-size:10px" onclick="this.focus();this.select();"/>
 
 
 
@@ -141,7 +141,7 @@ $comments = $img->getComments();
       <?php } ?>
 
       <?php if ($user->id) { ?>
-        <form method="post" class="addComment" action="<?php echo Config::$absolutePath, $iv->basePath, 'view/', $img->keyword; ?>">
+        <form method="post" class="addComment" action="<?php echo Config::$absolutePath, $iv->basePath, 'view/', $img->getLink(); ?>">
           <div>
             <textarea name="content" rows="3" cols="60"></textarea>
             <input class="submit" type="submit" name="addComment" value="Submit comment"/>

@@ -1,4 +1,6 @@
 <?php
+require_once('lib/image.php');
+require_once('lib/users.php');
 require_once('lib/db.php');
 require_once('lib/string.php');
 
@@ -15,6 +17,9 @@ class Comment
   {
     if (!$this->author && starts_with($prop, 'author->'))
       $this->author = new User;
+
+    if (!$this->image && starts_with($prop, 'image->'))
+      $this->image = new Image;
 
     if (@eval("\$this->{$prop} = \$value;") === false)
       throw new Exception("Invalid expression in property name \"$prop\" for class " . __CLASS__);
@@ -53,6 +58,7 @@ class Comment
       $tables .= ' STRAIGHT_JOIN ' . DB::escape_identifier(TABLE_IMAGES) . ' AS i ON c.`image` = i.`id`';
       $columns .= ',
         i.`id` AS `image->id`,
+        i.`hash` AS `image->hash`,
         i.`keyword` AS `image->keyword`';
       if ($flags & self::FETCH_DELETED)
         $where_clause .= ' i.`delete_reason` = \'\' AND';

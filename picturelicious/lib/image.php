@@ -17,7 +17,7 @@ class Image
   public $favorited_count;
   public $comments;
 
-  private $tags, $path, $thumbnail;
+  private $tags, $path, $thumbnail, $link;
 
   public $gridData;
 
@@ -148,6 +148,17 @@ class Image
       }
     }
     return $this->thumbnail;
+  }
+
+
+  public function getLink()
+  {
+    if (is_null($this->link) && !empty($this->hash)) {
+      $this->link = $this->getPath();
+      if (!empty($this->keyword))
+        $this->link .= '/' . $this->keyword;
+    }
+    return $this->link;
   }
 
 
