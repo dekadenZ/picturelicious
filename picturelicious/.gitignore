@@ -1,0 +1,7 @@
+/cache/
+/log/
+/import/
+/data/
+
+!.htaccess
+!/data/avatars/default.png
