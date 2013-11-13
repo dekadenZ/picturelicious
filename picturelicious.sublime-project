@@ -1,0 +1,26 @@
+{
+  "folders":
+  [
+    {
+      "path": ".",
+      "name": "Project root",
+      "file_exclude_patterns": [
+        ".gitignore",
+        "*.sublime-*"
+      ],
+      "folder_exclude_patterns": [
+        "picturelicious/cache",
+        "picturelicious/import",
+        "picturelicious/log",
+        "picturelicious/data/avatars",
+        "picturelicious/data/*/*"
+      ]
+    }
+  ],
+
+  "settings":
+  {
+    "tab_size": 2,
+    "translate_tabs_to_spaces": true
+  }
+}
