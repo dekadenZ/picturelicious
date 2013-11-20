@@ -25,12 +25,7 @@ class Filesystem
     }
     closedir( $dh );
 
-    if( !$clearOnly && @rmdir( $dir ) ) {
-      return true;
-    }
-    else {
-      return false;
-    }
+    return $clearOnly || @rmdir($dir);
   }
 
 
@@ -87,15 +82,15 @@ class Filesystem
       $chunk = fread( $fp, 8192 );
       $bytesRead += strlen( $chunk );
       if( $bytesRead > $maxSize) {
-        return false; 
+        return false;
       }
-      $contents .= $chunk; 
+      $contents .= $chunk;
     }
     fclose( $fp );
 
     file_put_contents( $target, $contents );
     return true;
-  } 
+  }
 }
 
 ?>
