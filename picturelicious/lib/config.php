@@ -114,4 +114,48 @@ if( function_exists('get_magic_quotes_gpc') && get_magic_quotes_gpc() ) {
   $_POST = array_map( 'stripslashes', $_POST );
 }
 
+
+function var_dump_r( $expr, $oneline = true )
+{
+  ob_start();
+  var_dump($expr);
+  $r = ob_get_clean();
+
+  if ($oneline)
+    $r = preg_replace(
+      array('/\s\{\s*/', '/\s\}\s*/', '/=>\n\s*/', '/\n\s+/', '/\n/'),
+      array('{ ', ' }', '=>', ', ', ''),
+      $r);
+
+  return $r;
+}
+
+function stacktrace_assert_handler( $file, $line, $msg )
+{
+  printf("<div class=\"php-error\">\nAssertion failed in <b>%s:%d</b>",
+    $file, $line);
+
+  if (!empty($msg))
+    echo ":\n  ", $msg;
+  echo "\n\n";
+
+  foreach (array_slice(debug_backtrace(), 2) as $level => $bt) {
+    printf("#%d  %s%s%s(%s) called", $level,
+      @$bt['class'], @$bt['type'], $bt['function'],
+      join(', ', array_map('var_dump_r', $bt['args'])));
+
+    if (!empty($bt['object']))
+      echo ' on ', var_dump_r($bt['object']);
+
+    printf(" at [%s:%d]\n\n", $bt['file'], $bt['line']);
+  }
+
+  echo '</div>';
+}
+
+if (Config::is_debug()) {
+  assert_options(ASSERT_WARNING, 0);
+  assert_options(ASSERT_CALLBACK, 'stacktrace_assert_handler');
+}
+
 ?>
