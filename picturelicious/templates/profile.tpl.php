@@ -37,7 +37,7 @@
         <input type="password" name="cpass" /> (leave empty, if you don't want to change it)
       </dd>
 
-      <dt>Repeat new password</dt>
+      <dt>Repeat new password:</dt>
       <dd>
         <input type="password" name="cpass2" />
       </dd>
@@ -56,10 +56,12 @@
 
       <dt>Avatar:</dt>
       <dd>
-        <input type="file" name="avatar" style="color: #000; background-color: #fff;"/><br/>
+        <input type="file" name="avatar" style="color: #000; background-color: #fff;"/>
       </dd>
+      <dt>Current avatar:</dt>
+      <dd><img src="<?php echo $user->getAvatar(); ?>"/></dd>
 
-      <dt>&nbsp;</dt>
+      <dt/>
       <dd>
         <input type="submit" name="save" class="button" value="Save" />
       </dd>
