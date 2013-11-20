@@ -45,7 +45,7 @@ function hex2bin( $str )
 
 function starts_with( $str, $prefix, $case_insensitive = false )
 {
-  return empty($prefix) || substr_compare($str, $prefix, 0, strlen($prefix), $case_insensitive) >= 0;
+  return empty($prefix) || substr_compare($str, $prefix, 0, strlen($prefix), $case_insensitive) === 0;
 }
 
 
