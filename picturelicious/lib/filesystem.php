@@ -33,25 +33,12 @@ class Filesystem
     }
   }
 
-  public static function mkdirr( $pathname ) {
-    // Check if directory already exists
-    if( empty($pathname) || is_dir($pathname) ) {
-      return true;
-    }
-    if ( is_file($pathname) ) {
-      return false;
-    } 
-    // Crawl up the directory tree
-    $nextPathname = substr( $pathname, 0, strrpos( $pathname, '/' ) );
-    if( self::mkdirr( $nextPathname ) ) {
-      if( !file_exists( $pathname ) ) {
-        $oldUmask = umask(0); 
-        $success = @mkdir( $pathname, Config::$defaultChmod );
-        umask( $oldUmask ); 
-        return $success;
-      }
-    }
-    return false;
+
+  /**
+   * Just a shallow wrapper around PHP's mkdir().
+   */
+  public static function mkdirr( $path, $mode = 0777 ) {
+    return mkdir($path, $mode, true);
   }
 
   public static function download( $url, $target, $maxSize = 2097152, $referer = false ) {
