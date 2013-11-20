@@ -1,12 +1,14 @@
 <?php
-
-/*
-  Various functions regarding file handling
-*/
-
 require_once( 'lib/config.php' );
 
-class Filesystem {
+umask(~Config::$defaultChmod);
+
+
+/**
+ * Various functions regarding file handling
+ */
+class Filesystem
+{
 
   public static function rmdirr( $dir, $clearOnly = false ) {
     $dh = opendir( $dir );

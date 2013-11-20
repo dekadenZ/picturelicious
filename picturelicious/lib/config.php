@@ -29,7 +29,7 @@ class Config {
 
   // Misc settings
   public static $usersPerPage = 50;
-  public static $defaultChmod = 0744;
+  public static $defaultChmod = 0755;
   public static $templates = 'templates/';
   public static $keywordWordSeperator = '-';
 
