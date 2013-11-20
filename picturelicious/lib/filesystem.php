@@ -41,6 +41,28 @@ class Filesystem
     return mkdir($path, $mode, true);
   }
 
+
+  public static function mkdir_prefix( $root, $str, $depth, $chars_per_level,
+    $mode = 0777
+  ) {
+    assert($depth >= 0);
+    assert($chars_per_level > 0);
+    assert(strlen($str) >= $depth * $chars_per_level);
+
+    $dir = $root;
+    if (!empty($dir) && $dir[strlen($dir) - 1] !== '/')
+      $dir .= '/';
+
+    for ($i = 0; $i < $depth; ++$i)
+      $dir .= substr($str, $i * $chars_per_level, $chars_per_level) . '/';
+
+    return
+      (empty($dir) || @mkdir($dir, $mode, true) || is_dir($dir)) ?
+        $dir . $str :
+        false;
+  }
+
+
   public static function download( $url, $target, $maxSize = 2097152, $referer = false ) {
     $contents = '';
     $bytesRead = 0;

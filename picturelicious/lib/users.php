@@ -505,15 +505,20 @@ class User
     if (!empty($localFile)) {
       $name = sha1_file($localFile);
       if ($name !== false) {
-        $dirprefix = Config::$images['avatarsPath'] . substr($name, 0, 2);
-        $name = "$dirprefix/$name.jpg";
+        require_once('lib/filesystem.php');
+        $name =
+          Filesystem::mkdir_prefix(Config::$images['avatarsPath'],
+            "$name.jpg", 1, 2);
 
-        if (!is_file($name)) {
-          require_once('lib/images.php');
-          if ((!is_dir($dirprefix) && !mkdir($dirprefix, 0755, true)) ||
-            !Image::createThumb($localFile, $name, 40, 40))
-          {
-            $name = false;
+        if ($name !== false) {
+          if (!empty($this->avatar) && strcasecmp($name, $this->avatar) === 0) {
+            return null;
+          }
+          else if (!is_file($name)) {
+            require_once('lib/images.php');
+            if (!Image::createThumb($localFile, $name, 40, 40)) {
+              $name = false;
+            }
           }
         }
       }
@@ -523,6 +528,7 @@ class User
 
       return $name;
     }
+
     return null;
   }
 
