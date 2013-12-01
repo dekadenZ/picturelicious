@@ -5,6 +5,7 @@ require_once('lib/base64.php');
 require_once('lib/password.php');
 require_once('lib/http.php');
 require_once('lib/string.php');
+require_once('lib/time.php');
 
 
 /*
@@ -658,6 +659,14 @@ class User
   }
 
 
+  public function updateScore( $force = false )
+  {
+    if ($force || is_null($this->score))
+      $this->fetchBy('id', self::FETCH_SCORE | self::FETCH_INVALID);
+    return $this;
+  }
+
+
   private function fetchBy( $filter, $flags = 0 )
   {
     assert(!empty($filter));
@@ -760,7 +769,7 @@ class User
     if (is_null($this->nextUploadTime)) {
       $r = DB::query_nofetch(
         'SELECT IFNULL(pl_get_next_upload_time(?, ?, ?), 0)',
-        array($this->id, 10, 7200));
+        array($this->id, Config::$maxNumUploads, Config::$uploadLockTime));
       assert($r);
       $this->nextUploadTime = $r->fetchColumn();
       assert($this->nextUploadTime !== false);
@@ -770,9 +779,20 @@ class User
   }
 
 
-  public function canUpload()
+  public function canUpload( $throw = false )
   {
-    return $this->getNextUploadTime() <= time();
+    $t = $this->getNextUploadTime();
+    $now = time();
+    $result = $t <= $now;
+
+    if (!$result && $throw) {
+      throw new ImageUploadException(sprintf(
+        'No more than %d images in %.1f hours! You can upload the next one %s.',
+        Config::$maxNumUploads, Config::$uploadLockTime / 3600,
+        time_diff_human($t, $now)));
+    }
+
+    return $result;
   }
 
 }

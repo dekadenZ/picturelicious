@@ -19,7 +19,6 @@ class Config
   public static $rememberCookie = 'remember';
 
   // Spam protection
-  public static $ipLockTime = 3600;
   public static $uploadLockTime = 7200;
   public static $maxNumUploads = 10;
 
@@ -33,7 +32,6 @@ class Config
   public static $usersPerPage = 50;
   public static $defaultChmod = 0755;
   public static $templates = 'templates/';
-  public static $keywordWordSeperator = '-';
 
   public static $colorSearchDev = 50;
 
@@ -68,6 +66,8 @@ class Config
     'thumbPath' => 'data/thumbs/',
     'avatarsPath' => 'data/avatars/',
     'maxDownload' => 2097152,
+    'minLength' => 10,
+    'maxPixels' => 16777216,
     'jpegQuality' => 80,
     'sharpen' => true
   );

@@ -1,11 +1,18 @@
-<?php include( Config::$templates.'header.tpl.php' ); ?>
+<?php
+include(Config::$templates.'header.tpl.php');
+require_once('lib/string.php');
 
+?>
 <form action="<?php echo Config::$absolutePath; ?>upload" enctype="multipart/form-data" method="POST">
   <fieldset>
     <legend>Upload / Post</legend>
 
     <p>
-      Images must be no larger than <strong>4096x4096</strong> and must not exceed <strong>2 MB</strong>. 
+      Images must be no larger than
+      <strong><?php echo si_size(Config::$images['maxPixels'], 'Pixel', 3); ?></strong>
+      <?php printf('(≈%1$d⨯%1$d)', (int) sqrt(Config::$images['maxPixels'])); ?>
+      and must not exceed
+      <strong><?php echo si_size(Config::$images['maxDownload'], 'Byte', 2, 'guess'); ?></strong>.
       If the specific image file is already in our database, the upload will fail. Please follow our rules:
     </p>
 
@@ -24,7 +31,7 @@
         There was an issue uploading your image:
         <ul>
         <?php foreach( $uploadErrors as $msg ) { ?>
-          <li class="error"><?php echo $msg?></li>
+          <li class="error"><?php echo htmlspecialchars($msg); ?></li>
         <?php }/*foreach*/?>
         </ul>
       </div>
@@ -38,12 +45,12 @@
 
       <dt>or URL:</dt>
       <dd>
-        <input type="text" name="url" value="<?php echo htmlspecialchars( $_POST['url'] ); ?>"/>
+        <input type="text" name="url" value="<?php echo htmlspecialchars(@$_POST['url']); ?>"/>
       </dd>
 
       <dt>Tags:</dt>
       <dd>
-        <input type="text" name="tags" value="<?php echo htmlspecialchars( $_POST['tags'] ); ?>"/>
+        <input type="text" name="tags" value="<?php echo htmlspecialchars(@$_POST['tags']); ?>"/>
       </dd>
 
       <dt>&nbsp;</dt>

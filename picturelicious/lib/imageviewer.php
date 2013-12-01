@@ -56,8 +56,6 @@ class ImageViewer extends ImageCatalog
       $img = $r->fetch();
     }
 
-    if ($this->user)
-      $img->uploader = $this->user;
     $this->image = $img;
     $img = $r->fetch();
 
@@ -68,6 +66,16 @@ class ImageViewer extends ImageCatalog
     $r->nextRowset();
     $r->closeCursor();
     unset($r);
+
+    $this->image->uploader =
+      !is_null($this->user) ? $this->user :
+      ((isset($_SESSION) && isset($_SESSION['user'])
+          && $_SESSION['user']->id === $this->image->uploader)
+      ?
+        $_SESSION['user']->updateScore() :
+        new User($this->image->uploader, User::FETCH_SCORE));
+
+    assert(!is_null($this->image->uploader->score));
 
     return true;
   }
