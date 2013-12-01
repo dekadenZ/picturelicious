@@ -70,7 +70,7 @@ switch ($r[0])
     $ib->load();
     if (!empty($ib->thumbs)) {
       require_once('lib/gridview.php');
-      $gv = new GridView(Config::$gridView['gridWidth']);
+      $gv = new GridView(Config::$gridView['width']);
       $ib->thumbs = $gv->solve($ib->thumbs);
 
       $cache->capture();

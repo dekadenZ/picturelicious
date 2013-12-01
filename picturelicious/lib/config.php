@@ -74,20 +74,20 @@ class Config
 
   // Grid Solver settings
   public static $gridView = array(
-    'gridSize' => 64,
-    'gridWidth' => 12,
+    'size' => 64,
+    'width' => 12,
     'borderWidth' => 2,
 
     // Definition of all Thumbnail classes ---------------------------
     // KEY:       CSS-className
-    // width/ height:   Size of the thumb in grid units
-    // percentage:    Percentage of thumbnails in this size
+    // width/height:   Size of the thumb in grid units
+    // ratio:     Ratio of thumbnails in this size
     // dir:       Name of the subdir with thumbs in this size
     'classes' => array(
-      'b2' => array( 'width'=>1, 'height'=>1, 'percentage'=>0.6,  'dir'=>64 ),
-      'b1' => array( 'width'=>2, 'height'=>2, 'percentage'=>0.35, 'dir'=>128 ),
-      'b0' => array( 'width'=>3, 'height'=>3, 'percentage'=>0.05, 'dir'=>192 )
-    ),
+      'b2' => array( 'width'=>1, 'height'=>1, 'ratio'=>0.60,  'dir'=>62 ),
+      'b1' => array( 'width'=>2, 'height'=>2, 'ratio'=>0.35, 'dir'=>126 ),
+      'b0' => array( 'width'=>3, 'height'=>3, 'ratio'=>0.05, 'dir'=>190 )
+    )
   );
 
 }

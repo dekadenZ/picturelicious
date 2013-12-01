@@ -113,7 +113,7 @@ class ImageBrowser extends ImageCatalog {
     $this->totalResults = DB::query_nofetch($q, $params)->fetchColumn();
 
     if ($this->user) {
-      // Set user as uploader, because we only looked for his/her images previously
+      // Set user as uploader, because we only looked for her images previously
       $this->user->imageCount = $this->totalResults;
       foreach ($this->thumbs as $t) {
         assert($t->uploader === $this->user->id);

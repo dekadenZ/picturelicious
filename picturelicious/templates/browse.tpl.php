@@ -39,7 +39,7 @@ require_once('lib/string.php');
 </div>
 <?php } ?>
 
-<div id="images" style="height:<?php echo $gv->height * Config::$gridView['gridSize']; ?>px">
+<div id="images" style="height:<?php echo $gv->height * Config::$gridView['size'] + Config::$gridView['borderWidth']; ?>px">
   <?php if( isset($ib->pages['prev']) ) { ?>
     <a href="<?php echo Config::$absolutePath, $ib->basePath, 'page/', $ib->pages['prev']; ?>" class="prev" title="Previous" id="prevBar">Previous</a>
   <?php } else { ?>

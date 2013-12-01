@@ -43,7 +43,7 @@ class GridView {
     $classCounts = array();
     $currentCount = 0;
     foreach( $classes as $className => $gc ) {
-      $currentCount += $gc['percentage'] * $total;
+      $currentCount += $gc['ratio'] * $total;
       $classCounts[$className] =  ceil( $currentCount );
     }
 
@@ -62,7 +62,7 @@ class GridView {
     }
 
     // Now that every thumb has a CSS-Class, we can sort them into our grid
-    $gridSize = Config::$gridView['gridSize'];
+    $gridSize = Config::$gridView['size'];
     foreach ($thumbs as $t) {
       $g = &$t->gridData;
       list($g['left'], $g['top']) =

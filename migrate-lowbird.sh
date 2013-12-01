@@ -4,6 +4,7 @@ Magick="$(command -v gm || command -v im)"
 oldschema=lowbird
 newschema=picturelicious
 thumbnail_sizes='64 128 192'
+thumbnail_border_width=2
 
 if [ ! -d 2013/01 ]; then
 	echo 'Are you sure »data/images« is the current working directory? If yes, please create a directory »2013/01« to overide this sanity check.' >&2
@@ -50,7 +51,7 @@ EOF
 		[ -e "$dstdir" ] || mkdir -vp "$dstdir"
 		cp -vnlT "$srcdir/$src" "$dstdir/$dst.${src##*.}" &&
 		for i in $thumbnail_sizes; do
-			  thumbdstdir="$thumbs/$i/$dstdir"
+			  thumbdstdir="$thumbs/$(($i-$thumbnail_border_width))/$dstdir"
 			  [ -e "$thumbdstdir" ] || mkdir -p "$thumbdstdir"
 			  cp -nlT "$thumbs/$srcdir/${i}x${i}/$src.jpg" "$thumbdstdir/$dst.jpg"
 		done

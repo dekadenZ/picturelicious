@@ -206,18 +206,33 @@ div#images {
       position: absolute;
       overflow: hidden;
     }
-      .b0, .b0 > a > img {
-        width: 192px;
-        height: 192px;
-      }
-      .b1, .b1 > a > img {
-        width: 128px;
-        height: 128px;
-      }
-      .b2, .b2 > a > img {
-        width: 64px;
-        height: 64px;
-      }
+
+    .b0 {
+      width: 192px;
+      height: 192px;
+    }
+    .b0 > a > img {
+      width: 190px;
+      height: 190px;
+    }
+
+    .b1 {
+      width: 128px;
+      height: 128px;
+    }
+    .b1 > a > img {
+      width: 126px;
+      height: 126px;
+    }
+
+    .b2 {
+      width: 64px;
+      height: 64px;
+    }
+    .b2 > a > img {
+      width: 62px;
+      height: 62px;
+    }
 
     a.thumb {
       display: block;
