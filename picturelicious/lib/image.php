@@ -1,5 +1,6 @@
 <?php
 require_once('lib/users.php');
+require_once('lib/arrays.php');
 
 
 class Image
@@ -35,8 +36,7 @@ class Image
   private function call_setters( $setters )
   {
     foreach ($setters as $prop) {
-      if (!is_null($this->{$prop}))
-        $this->__set($prop, $this->{$prop});
+      $this->__set($prop, $this->{$prop});
     }
   }
 
@@ -86,7 +86,15 @@ class Image
 
   public function setTags( $value )
   {
-    $this->tags = is_array($value) ? $value : explode("\0", $value);
+    $this->tags =
+      is_string($value) ? explode("\0", $value) :
+      (is_null($value) ? array() :
+       $value);
+
+    assert(
+      is_array($this->tags) &&
+      array_all($this->tags,
+        function($s) { return is_string($s) && strlen($s) >= 2; }));
   }
 
 
@@ -204,7 +212,7 @@ class Image
 
     if ($flags & self::FETCH_TAGS) {
       $tables .= ' LEFT OUTER JOIN `pl_tags` AS t ON i.`id` = t.`image`';
-      $where_clause .= ' AND t.`delete_reason` = \'\'';
+      $where_clause .= ' AND (t.`delete_reason` IS NULL OR t.`delete_reason` = \'\')';
       $columns .= ', GROUP_CONCAT(t.`tag` SEPARATOR \'\0\') AS `tags`';
     }
 
