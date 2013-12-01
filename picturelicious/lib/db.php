@@ -26,24 +26,22 @@ class DB
   public static $numQueries = 0;
 
 
-  private static function connect()
+  public static function connect()
   {
-    if (!is_null(self::$link))
-      return self::$link;
-
-    $db = Config::$db;
-    try {
-      self::$link = new PDO($db['datasource'], $db['user'], $db['password'],
-        array(
-          PDO::MYSQL_ATTR_INIT_COMMAND =>
-            "SET NAMES 'UTF8' COLLATE 'utf8_unicode_ci'",
-          PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-          PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
-          PDO::ATTR_EMULATE_PREPARES => false
-        ));
-    } catch (PDOException $e) {
-      die('Couldn\'t establish PDO database connection: ' . $e->getMessage() . "\nconnection string: " . $db['datasource']);
+    if (is_null(self::$link)) {
+      $db = Config::$db;
+      self::$link = new PDO(
+          $db['datasource'], $db['user'], $db['password'],
+          array(
+            PDO::MYSQL_ATTR_INIT_COMMAND =>
+              "SET NAMES 'UTF8' COLLATE 'utf8_unicode_ci'",
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
+            PDO::ATTR_EMULATE_PREPARES => false
+          ));
     }
+
+    return self::$link;
   }
 
 
