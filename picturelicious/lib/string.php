@@ -57,4 +57,15 @@ function starts_with( $str, $prefix, $case_insensitive = false )
 }
 
 
+function ends_with( $str, $suffix, $case_insensitive = false )
+{
+  $suffixLen = strlen($suffix);
+  if ($suffixLen === 0)
+    return true;
+
+  $offset = strlen($str) - $suffixLen;
+  return $offset >= 0 && substr_compare($str, $suffix, $offset, $suffixLen, $case_insensitive) === 0;
+}
+
+
 ?>
