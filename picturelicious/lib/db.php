@@ -87,14 +87,14 @@ class DB
   public static function query_nofetch( $q, $params = array(),
     $fetch_mode = null )
   {
-    if (!is_array($params)) {
-      $params = array_slice( func_get_args(), 1 );
-      $fetch_mode = null;
-    } else {
+    if (is_array($params) || is_object($params)) {
       assert(is_null($fetch_mode) || is_array($fetch_mode));
+    } else {
+      $params = array_slice(func_get_args(), 1);
+      $fetch_mode = null;
     }
 
-    // var_dump($q, $params, $fetch_mode);
+    //var_dump($q, $params, $fetch_mode);
 
     self::connect();
 
@@ -102,31 +102,34 @@ class DB
       if (self::$result)
         self::$result->closeCursor();
 
-      //var_dump($q, $params);
-
       if (empty($params) && empty($fetch_mode)) {
         self::$result = $r = self::$link->query($q);
-      } else {
+      }
+      else {
         self::$result = $r = self::$link->prepare($q);
 
         if (!empty($fetch_mode)) {
           call_user_func_array(array($r, 'setFetchMode'), $fetch_mode);
         }
 
-        /*
-        foreach ($params as $k => $v) {
-          $type = (is_null($v) ? PDO::PARAM_NULL :
-            (is_int($v) ? PDO::PARAM_INT :
-            (is_bool($v) ? PDO::PARAM_BOOL :
-              PDO::PARAM_STRING)));
-          $r->bindParam(is_int($k) ? $k + 1 : ":$k", $v, $type);
+        if (!is_object($params)) {
+          $r->execute($params);
         }
-        */
-
-        $r->execute($params);
+        else {
+          foreach ($params as $k => $v) {
+            $r->bindValue(":$k", $v /*,
+              (is_null($v) ? PDO::PARAM_NULL :
+              (is_int($v) ? PDO::PARAM_INT :
+              (is_bool($v) ? PDO::PARAM_BOOL :
+                PDO::PARAM_STRING)))*/ );
+          }
+          $r->execute();
+        }
       }
+
       return $r;
-    } catch (PDOException $e) {
+    }
+    catch (PDOException $e) {
       array_push($e->errorInfo, $q, $params);
       throw $e;
     }
