@@ -12,7 +12,7 @@ require_once('lib/http.php');
 function notfound()
 {
   global $cache, $user;
-  http_status(404, 'Not Found');
+  HTTPStatusCodes::set(HTTPStatusCodes::NOT_FOUND);
   include(Config::$templates . '404.tpl.php');
   $cache->disable();
 }

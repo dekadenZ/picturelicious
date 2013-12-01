@@ -428,8 +428,8 @@ class User
         '%changes%' => ' - ' . join("\n - ", $changes),
         '%changetime%' => date(DATE_RFC822, $update['time'])))
     ) {
-      http_status(500, 'Internal Server Error');
-      die();
+      throw new RuntimeException('Could not send validation e-mail',
+        HTTPStatusCodes::INTERNAL_SERVER_ERROR);
     }
 
     $messages['confirmationEmailSent'] = true;
