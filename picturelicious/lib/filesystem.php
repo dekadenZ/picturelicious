@@ -75,9 +75,45 @@ class Filesystem
     return (empty($dir) || self::mkdirr($dir, $mode)) ? $dir . $str : false;
   }
 
-  public static function download( $url, $target, $maxSize = 2097152, $referer = false ) {
-    $contents = '';
-    $bytesRead = 0;
+
+  public static function foreach_file( $callback, $path = '.',
+    $recursive = false )
+  {
+    if (!is_array($path))
+      return self::foreach_file_internal($callback, $path, $recursive);
+
+    foreach ($path as $p) {
+      if (!self::foreach_file_internal($callback, $p, $recursive))
+        return false;
+    }
+    return true;
+  }
+
+
+  private static function foreach_file_internal( $callback, $path, $recursive )
+  {
+    if (!$recursive || !is_dir($path))
+      return $callback($path) !== false;
+
+    $hDir = opendir($path);
+    if ($hDir === false)
+      return false;
+    $path .= '/';
+    while (($entry = readdir($hDir)) !== false) {
+      if ($entry === '.' || $entry === '..')
+        continue;
+
+      if (!self::foreach_file_internal($callback, $path . $entry, true))
+        break;
+    }
+    closedir($hDir);
+    return $entry === false;
+  }
+
+
+  public static function download( $url, $target, $maxSize = 2097152,
+    $referer = false )
+  {
 
     if( $referer ) {
       $opts = array(
