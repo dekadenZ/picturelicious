@@ -1,10 +1,11 @@
 <?php include( Config::$templates.'header.tpl.php' );
+require_once('lib/config.php');
 require_once( 'lib/time.php' );
 require_once('lib/string.php');
 
 
 $img = $iv->image;
-$htmltags = array_map('htmlspecialchars', $img->tags);
+$htmltags = array_map('htmlspecialchars', $img->getTags());
 $tagstring = join(', ', $htmltags);
 $uploader = $img->getUploader();
 $comments = $img->getComments();
@@ -82,7 +83,7 @@ $comments = $img->getComments();
         <?php } ?>
       </span>
       <div style="clear: both;"></div>
-      <?php if($user->admin) { ?>
+      <?php if (($user && $user->admin) || Config::DEBUG) { ?>
         <div style="float:right;" id="del">
           <div class="load" id="loadDelete"></div>
           <a href="#" onclick="del(<?php echo $img->id; ?>)">[x]</a>
@@ -102,7 +103,7 @@ $comments = $img->getComments();
         <span class="tag"><?php echo $tag; ?></span>
       <?php } ?></span>
 
-      <?php if( $user->id ) { ?>
+      <?php if ($user) { ?>
         <a href="#" onclick="swap($('addTag'), 'hidden', 'visible'); $('tagText').focus(); return false;">(add)</a>
         <form class="hidden" id="addTag" action="" onsubmit="return addTags(<?php echo $img->id; ?>, $('tagText'), <?php echo $user->admin ? 'true' : 'false';?>);">
           <input type="text" name="tags" id="tagText" <?php if($user->admin) {?>value="<?php echo $tagstring;?>"<?php } ?>/>
@@ -140,7 +141,7 @@ $comments = $img->getComments();
         </div>
       <?php } ?>
 
-      <?php if ($user->id) { ?>
+      <?php if ($user) { ?>
         <form method="post" class="addComment" action="<?php echo Config::$absolutePath, $iv->basePath, 'view/', $img->getLink(); ?>">
           <div>
             <textarea name="content" rows="3" cols="60"></textarea>
