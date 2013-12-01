@@ -47,7 +47,7 @@ function si_size($value, $unit = NULL, $digits = 2, $base = 1000)
 
 function hex2bin( $str )
 {
-  return pack('H*', $str);
+  return ctype_xdigit($str) ? pack('H*', $str) : false;
 }
 
 
