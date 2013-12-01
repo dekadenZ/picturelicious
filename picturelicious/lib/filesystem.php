@@ -42,30 +42,38 @@ class Filesystem
    * Just a shallow wrapper around PHP's mkdir().
    */
   public static function mkdirr( $path, $mode = 0777 ) {
-    return mkdir($path, $mode, true);
+    return is_dir($path) || mkdir($path, $mode, true);
   }
 
 
-  public static function mkdir_prefix( $root, $str, $depth, $chars_per_level,
-    $mode = 0777
-  ) {
+  public static function dir_prefix( $str, $depth, $chars_per_level )
+  {
     assert($depth >= 0);
     assert($chars_per_level > 0);
     assert(strlen($str) >= $depth * $chars_per_level);
 
-    $dir = $root;
-    if (!empty($dir) && $dir[strlen($dir) - 1] !== '/')
-      $dir .= '/';
-
+    $dir = '';
     for ($i = 0; $i < $depth; ++$i)
       $dir .= substr($str, $i * $chars_per_level, $chars_per_level) . '/';
 
-    return
-      (empty($dir) || @mkdir($dir, $mode, true) || is_dir($dir)) ?
-        $dir . $str :
-        false;
+    return $dir;
   }
 
+
+  public static function mkdir_prefix( $root, $str, $depth, $chars_per_level,
+    $mode = 0777 )
+  {
+    $dir = self::dir_prefix($str, $depth, $chars_per_level);
+
+    if (!empty($root)) {
+      if ($root[strlen($root) - 1] !== '/')
+        $root .= '/';
+
+      $dir = $root . $dir;
+    }
+
+    return (empty($dir) || self::mkdirr($dir, $mode)) ? $dir . $str : false;
+  }
 
   public static function download( $url, $target, $maxSize = 2097152, $referer = false ) {
     $contents = '';
