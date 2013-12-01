@@ -104,8 +104,8 @@ class Image
       assert(!empty($filter));
     } else if (is_integer($filter)) {
       $filter = array('id' => $filter);
-    } else if (is_string($arg)) {
-      $filter = array('keyword' => $filter);
+    } else if (is_string($filter)) {
+      $filter = array('hash' => $filter);
     } else {
       throw new Exception('Unsupported filter type ' . gettype($arg));
     }
