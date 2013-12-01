@@ -5,7 +5,9 @@
   for an in depth explanation of each value.
 */
 
-class Config {
+class Config
+{
+  const DEBUG = true;
 
   // Names and URLs for your installation
   public static $absolutePath = '/picturelicious/';
@@ -88,11 +90,6 @@ class Config {
     ),
   );
 
-
-  public static function is_debug()
-  {
-    return parse_url(self::$frontendPath, PHP_URL_HOST) === 'localhost';
-  }
 }
 
 
@@ -153,9 +150,11 @@ function stacktrace_assert_handler( $file, $line, $msg )
   echo '</div>';
 }
 
-if (Config::is_debug()) {
+/*
+if (Config::DEBUG) {
   assert_options(ASSERT_WARNING, 0);
   assert_options(ASSERT_CALLBACK, 'stacktrace_assert_handler');
 }
+*/
 
 ?>
