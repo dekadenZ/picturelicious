@@ -56,7 +56,7 @@ CREATE TABLE `pl_images` (
   FOREIGN KEY (`user`) REFERENCES `pl_users` (`id`),
   INDEX `user` (`user`, `logged` DESC) USING BTREE,
   INDEX `keyword` (`keyword`) USING HASH,
-  INDEX `hash` (`hash`) USING HASH,
+  UNIQUE INDEX `hash` (`hash`) USING HASH,
   INDEX `logged` (`logged` DESC) USING BTREE
 ) ENGINE=InnoDB;
 
