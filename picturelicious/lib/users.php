@@ -17,7 +17,7 @@ class User
 {
   public $name;
   public $id;
-  public $admin;
+  public $admin, $valid;
   public $website;
   public $email;
   public $avatar;
@@ -660,10 +660,10 @@ class User
 
   private function fetchBy( $filter, $flags = 0 )
   {
+    assert(!empty($filter));
     if (!is_array($filter)) {
+      assert(is_string($filter));
       $filter = array($filter => $this->{$filter});
-    } else {
-      assert(!empty($filter));
     }
 
     $r = DB::getRow(
@@ -677,15 +677,20 @@ class User
   }
 
 
+  private static $attributeTypes = array(
+      'score' => 'float',
+      'imageCount' => 'int',
+      'valid' => 'bool'
+    );
+
   private function __fix_types_internal()
   {
-    foreach (array(
-        'score' => 'float',
-        'imageCount' => 'int')
-      as $prop => $type)
-    {
-      if (is_string($this->{$prop}) && !settype($this->{$prop}, $type))
-        throw new Exception("Could not convert '{$this->{$prop}}' to $type");
+    foreach (self::$attributeTypes as $prop => $type) {
+      if (!is_null($this->{$prop})) {
+        if (!settype($this->{$prop}, $type)) {
+          throw new Exception("Could not convert '{$this->{$prop}}' to $type");
+        }
+      }
     }
   }
 
@@ -717,7 +722,7 @@ class User
       $columns .= ' u.`pass` AS `passwordHash, u.`remember` AS validationString';
 
     if ($flags & self::FETCH_INVALID) {
-      $columns .= ' u.`valid`';
+      $columns .= ', u.`valid`';
     } else {
       $where_clause .= ' AND u.`valid`';
     }
