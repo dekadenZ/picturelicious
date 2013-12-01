@@ -1,6 +1,7 @@
 <?php
 require_once( 'lib/config.php' );
 require_once( 'lib/db.php' );
+require_once('lib/image.php');
 require_once('lib/base64.php');
 require_once('lib/password.php');
 require_once('lib/http.php');
@@ -366,10 +367,10 @@ class User
   }
 
 
-  public function profile( $avatarLocalFile, &$messages )
+  public function profile( $avatarInfo, &$messages )
   {
     list($update, $update_restricted) =
-        $this->profile_validate($avatarLocalFile, $messages);
+        $this->profile_validate($avatarInfo, $messages);
 
     return (bool)(
       $this->profile_commit($update, $messages) |
@@ -438,7 +439,7 @@ class User
   }
 
 
-  private function profile_validate( $avatarLocalFile, &$_messages )
+  private function profile_validate( $avatarInfo, &$_messages )
   {
     $messages = array();
 
@@ -450,7 +451,7 @@ class User
       goto fail;
 
     $update['avatar'] =
-      $this->profile_validate_avatar($avatarLocalFile, $messages);
+      $this->profile_validate_avatar($avatarInfo, $messages);
     if (!empty($messages))
       goto fail;
 
@@ -501,33 +502,42 @@ class User
   }
 
 
-  private function profile_validate_avatar( $localFile, &$messages )
+  private function profile_validate_avatar( $avatarInfo, &$messages )
   {
-    if (!empty($localFile)) {
-      $name = sha1_file($localFile);
-      if ($name !== false) {
-        require_once('lib/filesystem.php');
-        $name =
-          Filesystem::mkdir_prefix(Config::$images['avatarsPath'],
-            "$name.jpg", 1, 2);
+    $localFile =
+      ($avatarInfo['error'] === 0 && $avatarInfo['size'] > 0) ?
+        $avatarInfo['tmp_name'] : null;
 
-        if ($name !== false) {
-          if (!empty($this->avatar) && strcasecmp($name, $this->avatar) === 0) {
+    if (!empty($localFile)) {
+      $hexhash = sha1_file($localFile);
+      if ($hexhash !== false) {
+        require_once('lib/filesystem.php');
+        $path =
+          Filesystem::mkdir_prefix(Config::$images['avatarsPath'],
+            "$hexhash.jpg", 1, 2);
+        if ($path !== false) {
+          if (!empty($this->avatar) && strcasecmp($path, $this->avatar) === 0)
             return null;
-          }
-          else if (!is_file($name)) {
-            require_once('lib/images.php');
-            if (!Image::createThumb($localFile, $name, 40, 40)) {
-              $name = false;
+
+          if (!is_file($path)) {
+            try {
+              $im = Image::read_image($avatarInfo, true);
+              $im->setImageFilename($path);
+              $im->writeThumbnail(40, 40, false);
+              $im->destroy();
+            } catch (ImageUploadException $ex) {
+              $messages['avatarFailed'] = $ex->getMessage();
+              HTTPStatusCodes::set(($ex->getCode() > 0) ? $ex->getCode() : HTTPStatusCodes::INTERNAL_SERVER_ERROR);
+              return false;
             }
           }
         }
       }
 
-      if ($name === false)
+      if ($path === false)
         $messages['avatarFailed'] = true;
 
-      return $name;
+      return $path;
     }
 
     return null;

@@ -6,8 +6,8 @@ if ($user) {
   }
 
   $messages = array();
-  if (!empty($_POST)) {
-    $user->profile($_FILES['avatar']['tmp_name'], $messages);
+  if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $user->profile(@$_FILES['avatar'], $messages);
   }
 
   include(Config::$templates . 'profile.tpl.php');

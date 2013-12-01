@@ -17,7 +17,10 @@
     <?php } ?>
 
     <?php if( isset($messages['avatarFailed']) ) { ?>
-      <div class="warn">Your avatar image could not be processed!</div>
+      <div class="warn">
+        Your avatar image could not be processed:
+        <?php echo is_string($messages['avatarFailed']) ? $messages['avatarFailed'] : 'unknown reason'; ?>
+      </div>
     <?php } ?>
 
     <?php if( isset($messages['confirmationEmailSent']) ) { ?>
