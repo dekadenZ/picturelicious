@@ -10,6 +10,15 @@ umask(~Config::$defaultChmod);
 class Filesystem
 {
 
+  /**
+   * Calls unlink() but has no resource parameter.
+   */
+  public static function unlink( $path )
+  {
+    return unlink($path);
+  }
+
+
   public static function rmdirr( $dir, $clearOnly = false ) {
     $dh = opendir( $dir );
     while ( $file = readdir( $dh ) ) {
