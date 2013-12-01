@@ -29,7 +29,7 @@ function time_diff_human ($time, $reference = NULL)
 
     foreach (unserialize(HUMAN_TIME_TOKENS) as $unit => $text) {
         if ($absdiff >= $unit) {
-            $numberOfUnits = floor($absdiff / $unit);
+            $numberOfUnits = (int) ($absdiff / $unit);
             $rv = $numberOfUnits . ' ' . $text;
             if ($numberOfUnits > 1)
                 $rv .= 's';
