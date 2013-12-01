@@ -1,33 +1,43 @@
 <?php
 
+$all = empty($r[0]);
+
 switch ($r[0])
 {
   case 'all':
+    $all = true;
   case 'search':
   case 'user':
-    if ( //----------------------------------------------------- view
-      @$r[ ($r[0] === 'all') ? 1 : 2 ] === 'view'
-    ) {
+    $actionIndex = 2 - (int) $all;
+    if (@$r[$actionIndex] === 'view') {
+      //----------------------------------------------------- view
       require_once('lib/imageviewer.php');
       $iv = new ImageViewer();
+
+      /*
+       * Althought this block was replaced by the equivalent subsequent block,
+       * we keep it around for documentation:
 
       switch ($r[0]) {
         case 'search': // /search/term/view/[hash]/[keyword]
           $iv->setSearch(@$r[1]);
-          $offset = 3;
           break;
 
         case 'user': // /user/name/view/[hash]/[keyword]
           $iv->setUser(@$r[1]);
-          $offset = 3;
           break;
 
         default: // /all/view/[hash]/[keyword]
-          $offset = 2;
           break;
       }
+       */
 
-      $iv->setCurrentHex(@$r[$offset]);
+      if (!$all) {
+        $set = 'set' . ucfirst($r[0]);
+        $iv->$set(@$r[1]);
+      }
+
+      $iv->setCurrentHex(@$r[$actionIndex+1]);
       $iv->load();
 
       if (!is_null($iv->image)) {
@@ -56,9 +66,7 @@ switch ($r[0])
     require_once('lib/imagebrowser.php');
     $ib = new ImageBrowser(Config::$images['thumbsPerPage']);
 
-    $all = !in_array($r[0], array('search', 'user'));
-    $pageIndex = 2 - intval($all);
-
+    $pageIndex = 2 - (int) $all;
     if (@$r[$pageIndex] === 'page')
       $ib->setPage(@$r[$pageIndex+1]);
 
