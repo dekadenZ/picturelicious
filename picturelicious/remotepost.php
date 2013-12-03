@@ -2,7 +2,7 @@
 
 header("Content-type: text/html; charset=UTF-8");
 require_once( 'lib/config.php' );
-require_once( 'lib/users.php' );
+require_once( 'lib/user.php' );
 require_once( 'lib/db.php' );
 
 $user = new User();

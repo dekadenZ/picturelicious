@@ -25,7 +25,7 @@ if(
 }
 
 
-require_once( 'lib/users.php' );
+require_once( 'lib/user.php' );
 require_once( 'lib/db.php' );
 
 // If the User logged in with POST or a remember cookie, we need forumops.php

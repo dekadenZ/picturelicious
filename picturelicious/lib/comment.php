@@ -1,6 +1,6 @@
 <?php
 require_once('lib/image.php');
-require_once('lib/users.php');
+require_once('lib/user.php');
 require_once('lib/db.php');
 require_once('lib/string.php');
 

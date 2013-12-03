@@ -1,5 +1,5 @@
 <?php
-require_once('lib/users.php');
+require_once('lib/user.php');
 require_once('lib/db.php');
 require_once('lib/filesystem.php');
 require_once('lib/arrays.php');
